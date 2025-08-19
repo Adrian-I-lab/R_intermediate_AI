@@ -1,0 +1,784 @@
+---
+title: 'Draft Plan Reproducible Analysis AI'
+author: "Adrian Ilich"
+date: "`r Sys.Date()`"
+output:
+ html_document:
+   css: style_wide.css
+   code_folding: hide
+   number_sections: true
+   toc: true
+   toc_float: true
+   toc_depth: 3
+---
+
+# Reproducible Analysis and Good Coding practices in R
+
+## Overview of workshop:
+
+Idea: turn into a bioinformatics/statistician simulator. Run workshop as if we are starting a new project for a client, setting everything up, do some analysis, and do GitHub as we go to get some practice? Maybe end with new client and they give everything a go for themselves to actually solidify skills/info.
+
+Day 1 part 1: Set up project, set up renv, set up github, open mark down/quarto file, install packages we need 
+
+Day 1 part 2: Play around with our quarto/markdown to see which output and style we want our data report to have, insert dummy code e.g. from tutorial GitHub, render some things. Finish with pushing and committing to GitHub. 
+
+Day 2 part 1: Pull from GitHub to get our project files again. Play with functions, lapply. Push and commit to github. 
+
+Day 2 part 2: Try for yourselves, give them a scenario, dataset and goal e.g. I want to visualise my data and do some certain stats test to get the p-value. Start from scratch make a new project, renv packages, open a markdown file write the analysis, export the HTML output for your client.
+
+## New client has called - You have been employed!
+
+Scenario: Music producer wants to revive Y2K music and aesthetics and has employed you to perform statistical analysis on the billboard hottest 100 songs of the year 2000. You are to analyse the data and come up with best performing artists, songs, and identify trends in streams per week throughout the year. which artists had the most played songs? Which songs had the longest streaks over the year? Which songs had the highest number of streams in a single week?
+
+All this info will help the producer man come up with the next hit song which will revive Y2K aesthetics in pop-culture.
+
+As a qualified statistician you are going to use reproducible coding practices to create and document your analysis and give your findings in the form of a HTML report to the producer.
+
+## Step 1: set up your project and make sure things will be reproducible
+
+To set up a project we need to make sure we do two crucial things at the start
+
+1.  Make a new R project with renv to keep all things related to your project in one place
+
+-   using renv when making your project ensures you don't have reproducibility issues down the line if packages get updated or if there is a new version of R. Once a package is installed into this new project, the package will be locked in the version it was installed as and can never be changed without altering the project. This is best practice as things update and change very fast in the bioinformatics/coding/stats space so when doing analysis it is basically guaranteed that any code you write today will come up with errors if you try to run it in a years time unless you make sure all packages and versions are the same!
+
+2.  Make a github repository and git related to your project so you can keep safe backups
+
+-   Git allows you to keep all versions of your scripts so if one week you realize you have ruined your analysis and all these random errors pop up all of a sudden, you can go onto github and pull your script from last week and not have to worry. It will also be your safeguard in case a catasrophy strikes such as you type "rm -rf" in the HPC and delete your whole project. The HPC is not backed up if you delete something its gone forever, so its incredibly important that you have back ups. These script versions are also your documentation and can be useful to you in the same way a lab book is useful to a wet lab researcher, you can go in to old projects or old script versions and see what you were doing, you can also see the exact day and time you uploaded something to github in case you ever need to show you completed certain work by a certain day/time.
+
+(probably will have to have a mini git/github tutorial here)
+
+Make diagram to explain: Code Project (git status, git add, git commit)--\> git file (git push)--\> github (git pull ) --\> get Code Project from anywhere --\> repeat cycle
+
+Overtime you will have an in depth diary and documented journey of your code analysis which is 1) safe and useful for you but also 2) important for publishing or any kind of software/package development and 3) incredibly useful if there is ever any legal issues, this is your dry lab lab book.
+
+Check list:
+
+-   have R project folder with renv/ folder 
+
+-   have git hub account
+
+-   have git hub repository which is named the same as R project (to keep things easy to track)
+
+-   have .git file in your R project
+
+## Step 2: set up your project folders and files
+
+Make folders to keep things neat. I like to organised the project base folder to have only script files then have a folder for raw data or inputs, a folder for outputs and results, and finally a folder for R_objects that you may want to save throughout your work (i.e. so you can start stop throughout your pipeline --\> never save environment image this leads to inconsistencies and ruins reproducibility of your code). Finally make an Rmarkdown file which we will use to write our analysis in.
+
+We also need to make a git ignore file so we can make our lives easier when using git/github. Only upload scripts never data, images, etc. git ignore file is a file which is read every time you try to add something to your git file and if the folder, file name or file extension is listed in the git ignore file it will never be added to the git file and therefore never committed to the git file or pushed to github. Important as if you make everything open access it can have issues with client confidentiality, reduce trust or decrease interest if you want to commercialise a product or even reduce your appeal to high impact journals if your data and code is publicly available before you publish. Always keep github repository on private until you are sure you want to publish and remember everything you commit to that repository can be viewed by anyone once you make it public.
+
+Talk with BD or legal department at QIMR if you are unsure or working on a commercial product that will be made available to learn more about specific github licenses you can apply to public repositories to protect your IP.
+
+Checklist:
+
+-   have Data/, Outputs/, and R_objects/ folders in your R project folder
+-   have .gitignore in your project folder
+-   have Rmarkdown file in your project folder
+
+## Step 3: Link your github account
+
+This can seem overwhelming and annoying at first but it is so important and useful. Set up has quite a few extra steps but once you set up your repository and project there are truly only 5 functions that you will use from day to day.
+
+
+
+git status: what files in your project, if any, are changed or not added to your .git file 
+
+git add .: add everything in your project folder to your .git (anything listed in .gitignore file is not added unless you forcefully add it e.g. git add -f path/to/file)
+
+git commit -m "now figure 1.1 has black and white theme": now that things are added onto the git file we need to actually save them (or commit it) think about opening a word document and then closing it before you hit save, you loose all your work. Always commit changes once you add. Also always add a comment explaining the impact of your change. Its common practice to not comment what you did but the implications of the change i.e. 
+
+"Changed ggplot on line 33 to have geom_bar as well as geom_freqpoly." bad comment :(
+
+"Figure 1.1 now shows data frequency histogram line overlayed on bar plot." good comment :)
+
+git push origin main: now that things are saved on your .git file lets back it up on github. The whole point is to have a nice back up and be able to share from any device so only having a .git is better than nothing but stopping there you lose a lot of good benefits of doing this. Also you are keeping your back up in the same folder as the actual thing so its not a good back up. git push moves it to your repository but you can have multiple branches (more advanced than we need to go into for this) but the main branch is called the main origin so you push to origin main.
+
+Next time you log into a new computer without your files then you just do:
+git pull origin main: get all the files from your github from the main branch
+
+And those are the only fucntions you actually need to remember. However, as mentioned it will take a few extra steps to get things set up and linked from R to github.
+
+### Git Step 0:
+
+You should already have a github account made and a repository made with the same name as your project.
+https://swcarpentry.github.io/git-novice/index.html#creating-a-github-account
+
+You should also have git installed on your computer:
+https://carpentries.github.io/workshop-template/install_instructions/#git
+
+  for windows shortcut:
+  https://gitforwindows.org/
+
+
+### Git Step 1:
+
+```{r}
+# Packages
+renv::install("knitr")
+
+is_online <- function(site = "http://www.google.com/") {
+  tryCatch({
+    readLines(site, n = 1)
+    TRUE
+  }, warning = function(w) {
+    # Optionally handle warnings, e.g., by muffling them
+    invokeRestart("muffleWarning")
+  }, error = function(e) {
+    FALSE
+  })
+}
+
+# Check if online
+if (is_online()) {
+  print("R has internet access.")
+} else {
+  print("R does not have internet access.")
+}
+```
+
+open terminal and cd to your project folder. It should be already there but just check:
+
+```{r}
+getwd()
+```
+
+Now we need to configure settings for git such as our user and email.
+
+If you use a private email address with GitHub, then you can use GitHub’s no-reply email address for the user.email value. It looks like ID+username@users.noreply.github.com. You can look up your own address in your GitHub email settings. Otherwise you can use your private email or your QIMR email too. It doesnt really matter.
+
+```{bash}
+git config --global user.name "adrian ilich"
+git config --global user.email "adrian.ilich@qimrb.edu.au"
+
+# Windows:
+git config --global core.autocrlf true
+
+# MacOS and Linux:
+# git config --global core.autocrlf input
+
+# I also prefer to set default editor to nano
+git config --global core.editor "nano -w"
+
+# set default branch
+git config --global init.defaultBranch main
+
+# you can check your updated global git settings with: 
+git config --list --global
+```
+
+these updated settings will stay default for all future git projects on this account/computer now.
+
+### Git Step 2:
+
+make sure you are in your R project folder. Then run the following command to create a git file for this folder:
+
+```{bash}
+git init
+```
+
+### Git step 3: set up github remote
+
+make github repo if you haven't already
+
+in repo page click on green code button, in local under clone click ssh and copy the link into the command below
+
+
+```{bash}
+git remote add origin git@github.com:Adrian-I-lab/R_intermediate_AI.git
+# Check command worked
+git remote -v
+```
+### Git Step 4: Set SSH pair (this is the password to link to your github)
+
+Make SSH key pair. Do in terminal as it asks for interaction which cant be done in R markdown chunk and just freezes your rstudio session. It will ask for file name, then password, then confirm password. Just press enter 3 times for default file name and no password. This will make an ssh key in your user folder on the computer in the secret .ssh/ folder:
+e.g. C:/Users/AdrianI/.ssh/id_ed25519 
+
+
+
+```{bash}
+ssh-keygen -t ed25519 -C "adrian.ilich@qimrb.edu.au"
+```
+
+### Git Step 5: tell github the password  
+We have an ssh key pair but we need to give one of the two files to github. We always give the public file not the private key. to get it run the following command and then cimply copy the output text:
+
+```{bash}
+cat C:/Users/AdrianI/.ssh/id_ed25519.pub
+# but change folder to your name
+```
+once you have copied the key go into github. Go into your github settings (NOT THE REPOSITORY SETTINGS) and go to SSH and GPG keys. click add new ssh key (top right corner green button) and then simply make a name that describes where this key is to e.g. Personal laptop key or HPC_access key etc. then paste the id_ed25519.pub file contents that you copied in the box below and save. Leave key type as authentication key. Github may ask you to enter a authentication code that it emails to your email as a safety precaution.
+
+### Git Step 6: Push local changes to github
+
+Now we have set up git and github and should be ready to go. As mentioned this set up is only done once, from now on you really only use those 5 key functions to push and pull from your files to github and back. Lets try:
+
+```{bash}
+# Check what is changed in our files from our .git file
+git status
+```
+No commits yet, lets try adding and committing. Make sure that there is nothig in the untracked fiels that shouldnt be there e.g. data, images, or our renv files....
+
+Lets update our .gitignore file. Since we are in rstudio we can just open the file and edit it here. On the HPC you would need to use nano or vim to edit it. after updating the git igonore file mine looks like this. You may need to use your own file and folder names if you named things differently:
+
+```
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+renv/
+
+renv.lock
+
+Data/
+
+Outputs/
+
+R_objects/
+```
+
+Now none of these files or folders will ever be added to git/github. As your project progresses remeber to always check each time you go to add using git status if there is any kind of file or folder that shouldnt be there and upfdate this gitignore file accordingly.
+
+Lets check again to make sure its all safe to commit now:
+```{bash}
+git status
+```
+
+Now lets add and commit:
+
+```{bash}
+git add . # The dot means add everything, if you want to add a specific file you can put file name here
+```
+
+
+
+
+
+
+
+
+
+## Step 4: Set up the YAML chunk for the Rmarkdown
+
+R markdown file, unlike normal .R script file, can be rendered into a report e.g. pdf, docx or html files.
+
+Example HTML file YAML
+```         
+---
+title: "Draft Data Report 1"
+author: "Adrian Ilich"
+date: "`r Sys.Date()`"
+output:
+ html_document:
+   css: style_wide.css
+   code_folding: hide
+   number_sections: true
+   toc: true
+   toc_float: true
+   toc_depth: 3
+---
+```
+
+Example PDF file YAML
+```         
+---
+title: "Draft Data Report 1"
+author: "Adrian Ilich"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+---
+```
+
+### Rmarkdown YAML section notes:
+
+
+1. Document Metadata
+
+Beyond title, author, date, and output, you can also specify:
+
+abstract: A summary that appears at the beginning of some output formats.
+
+subtitle: Adds a secondary title under the main one.
+
+keywords: Useful for indexing or academic articles.
+
+lang: Language code (e.g., en-AU) for localisation.
+
+bibliography: Path to .bib file for references.
+
+csl: Citation style language file (e.g., APA, Nature).
+
+link-citations: true/false to hyperlink in-text citations to the bibliography.
+
+
+2. Output Customisation
+
+Each output format can have nested options. For example:
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: journal
+    highlight: tango
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+
+
+3. Code & Chunk Options
+
+These affect how code and results are shown:
+
+echo: Show/hide code.
+
+eval: Run or skip code.
+
+warning / message: Display or suppress warnings/messages.
+
+error: Show errors instead of stopping render.
+
+code_download: Provide a download link for source code.
+
+
+4. Figure & Table Options
+
+fig_width / fig_height: Control figure size.
+
+fig_caption: Allow figure captions.
+
+fig_align: Left, centre, right.
+
+df_print: Control table printing style (e.g., kable, paged).
+
+
+5. Navigation & Structure
+
+toc_depth: Depth of TOC expansion.
+
+number_sections: Adds section numbering.
+
+anchor_sections: Adds anchors to headings for linking.
+
+linkcolor / urlcolor (LaTeX): Style hyperlinks.
+
+
+6. Interactivity (HTML only)
+
+code_folding: "show", "hide", or "none".
+
+code_download: Enable download of source .R script.
+
+toc_float: Floating table of contents.
+
+self_contained: true/false (embed or link assets).
+
+mathjax: For rendering equations.
+
+
+7. Advanced / Package-Specific
+
+runtime: For interactive execution (e.g., shiny, shiny_prerendered).
+
+params: Define parameters for parameterised reports (useful for pipelines).
+
+includes: Add extra files like headers/footers (HTML or LaTeX).
+
+keep_tex: Keep the intermediate TeX file for debugging.
+
+citation_package: natbib or biblatex (for LaTeX).
+
+## Step 5: Importing packages and loading libraries 
+
+In the R markdown now that we have made the YAML lets start populating the document
+
+Normally I follow this template roughly
+
+```{r}
+# Introduction
+## Experiment/data
+## Research QUestions/aims
+
+# Packages
+
+# Load in data
+
+# Analysis
+## step 1
+## Step 2
+### Step 2.1 
+# etc...
+
+```
+
+
+### renv and Version control
+
+It is important to keep track of, and report, the versions of R and R packages you used for analysis.
+
+We have made the project using renv so any installations will be automatically locked for the project. Be aware of compatibility issues certain packages may only work with certain versions of R and other packages versions of dependent packages. Try not to install from two different versions of bioconductor for example... 
+
+Describing your R environment when things were calculated is required for reproducibility. If all you need is the version of R you are using, the built in object `version` is a list of different character strings that include the R version number, date of release, and platform you are using R on (among other things). A more simple way to get the R version is the `getRversion()` function, and you can use it's return value to make comparisons (in case you want your code to do different things based on the version number). Finally, the `sessionInfo()` function returns more information about the R session at the time of running the function, including the version numbers of the loaded packages.
+
+-   Session Info and version
+
+```{r Session info}
+# Just R version 
+getRversion()
+# comparisons
+getRversion() >= "4.3.0"
+getRversion() >= "4.4.0"
+
+# more details about the R version. Note this is not a function
+version
+
+# details about your R session
+sessionInfo()
+```
+
+-   \^ already mentioned in existing workshops\*
+
+### Package version control (without renv)
+
+The R package system is designed to override existing versions of packages, with the aim that the user always has the latest version. *If you want to have multiple versions of a package on your device* then you will need to download them in different locations.
+
+You are likely already familiar with install packages using the `install.packages()` function. If you don't specify the `lib` argument, the default library location is used, with is the the first element (if there are multiple elements) of `.libPaths()`. You can change you library pathways, or install a package specifically at different library location, e.g. `install.packages('foo', lib = 'C:/User/Me/R/Library/Test')`.
+
+If you want to install an older version of a package, the `install_version()` function from the `remotes` package has this capability. The `remotes` package also has function designed to install packages from locations besides CRAN, including in devleopment versions from github.
+
+```{r package version}
+#| eval: false
+
+# to install a package
+install.packages("dplyr")
+
+# to install a package at a specific location
+install.packages("dplyr", lib = "C:/R/Libraries/Test")
+
+# to install a specific version
+library(remotes)
+remotes::install_version("dplyr", version = "1.0.7")
+```
+
+The Packages pane in RStudio lists the packages downloaded to your system, including a description, the version number, and a checkbox for if the have been libraries in to the session. this information can similarly be accessed through the function `installed.packages()`, which includes where the packages has been downloaded, dependencies, and other information. We recomment viewing the output from installed.packages()`through the`View()\` function in RStudio
+
+```{r view install packages}
+#| eval: false
+
+# view installed packages
+View(installed.packages())
+
+```
+
+### Package version control with renv
+
+Initiate renv:
+
+```{r, eval = FALSE}
+renv::init()
+```
+
+
+If renv.lock pins package X at version 1.2.3 but you want 1.3.0:
+
+Install explicitly:
+
+
+```{r, eval = FALSE}
+renv::install("package@1.3.0")
+```
+
+
+Then update the lockfile with:
+
+```{r, eval = FALSE}
+renv::snapshot()
+```
+
+Use hydrate to get packages that were already in your library on your computer e.g. on work computer proxy blocks renv from installing so you need to hydrate curl and Stringr before running Satomi's proxy code:
+
+`source("L:/Lab_Stats_Unit/Adrian/Proxy_Settings_R.R")`
+
+```{r}
+renv::hydrate(packages = 'curl',sources = 'C:/Program Files/R/R-4.4.1/library')
+renv::hydrate(packages = 'stringr',sources = 'C:/Program Files/R/R-4.4.1/library')
+```
+
+
+This will replace the pinned version. However, this is not recommended maybe only do this during inital installations of packages but once you have started some analysis dont do this as changing versions may result in your code no longer working or havign compatibility issues.
+
+To deactivate renv in a project, use `renv::deactivate()`. This removes the renv auto-loader from the project .Rprofile, but doesn’t touch any other renv files used in the project. If you’d like to later re-activate renv, you can do so with `renv::activate()`.
+
+To completely remove renv from a project, call `renv::deactivate(clean = TRUE)`. If you later want to use renv for this project, you’ll need to start from scratch with `renv::init()`.
+
+### Package and software version control 
+
+If you use other software than R, e.g. you can use reticulated to write in bash, python, and R all in the same R markdown document. For this renv doesn't work anymore as it only covers the R packages. When things get more complicated you will need to start using and building containers. This is out of the scope of what we do here but its good for you all to know this exists and they are essentially just renv but for everything and anything so you can control python, r and bash based packages and libraries all at once. 
+
+## Step 6: Learning some more advanced coding skills
+
+### Functions
+
+Just like we use functions from different packages to make a change to the environment or some input, we can write our own functions. This can be particular useful when we identify large sections of code that are repeated (i.e. copied, pasted, than changed slightly). By turning the repetitious code into a function, we can make our code tidier and easier to read, as well as reducing the risk of the code being incorrectly copied or updated.
+
+In the chunk of R code below, we create a function that calculates the length of the hypotenuse in a right-angled triangle (via the Pythagorean theorem, $c^2=a^2+b^2$ or $c=\sqrt(a^2+b^2)$). Firstly, we assign the function to an object called `pyth_func`. Inside the `function()` parentheses, we include what our function arguments are going to be. We can also decide to give the arguments default values (here we say `a` is 3 by default and `b` is 4 by default). Whenever we call the function `pyth_func()`, we can provide values for `a` and `b` (or use the default values). Inside the curly braces `{}` after the closing of the parenthesis, we include the code we want the function to perform each time we call it. In the case here, the function `pyth_func()` makes two objects (`a_sqrd` which is `a` squared, and `b_sqrd` which is `b` squared), then calculates the square root of the sum of those objects, the result of which is assigned to the object `c`. The object `c` is then the argument of the `return()` function, which is how the function `pyth_func()` knows what to output when it is called (i.e. the output of `pyth_func()` is `c`).
+
+While the first three lines of code in the `pyth_func()` function could all be done in one line (i.e. `c <- sqrt(a^2 + b^2)`), using the function as is highlights an important point: if something isn't printed to the screen or given as input to the `return()` function, then it will no longer exist once the main function has finished running. In the case of the `pyth_func()` function, once it has finished running the `a_sqrd` and `b_sqrd` objects won't exist in your environment.
+
+```{r basics of a function}
+#| eval: false
+
+# Pythagorean theorem, c^2=a^2 + b^2
+pyth_func <- function(a = 3, b = 4){
+  a_sqrd <- a^2
+  b_sqrd <- b^2
+  c <- sqrt(a_sqrd + b_sqrd)
+  return(c)
+}
+
+```
+
+You don't strictly *have* to use the `return()` function. If there is no `return()` function, the last thing that was printed to the console will be the output.
+
+Note also, you can only have one object as an argument in the `return()` function to be the output of your function. If your user written function creates many objects you want to have as output, this can be achieved by making a list with all the output as elements of that list.
+
+See the example below. The function `summarise_billboard()` summarizes a data set of Billboard top 100 hits, calculating multiple things of interest. The object that is returned from `summarise_billboard()` is a list object that contains: the number of songs in the charts that year, a collection of artists that had multiple hits, the tracks that reached number 1 on the charts, and how long each track was on the charts. This function could be used for Billboard top 100 data from any year (provided the data is provided in the same format).
+
+```{r more complex function}
+#| eval: false
+library(tidyverse)
+
+df <- billboard # song rankings on Billboards top 100 in the year 2000
+
+summarise_billboard <- function(data){
+  # summarise_billboard takes the billboard chart information from any year, and
+  # calculates summarises of the data
+  
+  # input: data is a dataframe with columns:
+  #           $ artist        [name of artist]
+  #           $ track         [name of track]
+  #           $ date.entered  [date entering the charts]
+  #           $ wk1           [ranking in first week on charts]
+  #           $ ...           [wk2, wk3, wk4, etc.]
+  
+  # output: list of 4 elements
+  #           $ Number of Songs  -  integer number of songs in charts
+  #           $ Common Artists   -  tibble dataframe with variable artist. 
+  #                                 Contains only artists with at least 3 songs 
+  #                                 in charts
+  #           $ Number 1s        -  tibble dataframe with variables artist and
+  #                                 track. Contains tracks that were number 1 
+  #                                 on the charts.
+  #           $ Chart Length     -  tibble dataframe with variables artist, track
+  #                                 date.entered, and num_weeks. The variable 
+  #                                 num_weeks is the number of weeks the track 
+  #                                 was in the charts.
+  
+  # number of songs on the chart
+  num_songs <- dim(data)[2]
+  
+  # artists with 3 or more songs in charts
+  common_artists <- data %>% 
+    group_by(artist) %>% 
+    mutate(num = n()) %>%
+    filter(num >= 3) %>%
+    ungroup() %>%
+    select(artist) %>%
+    distinct()
+  
+  # artists with a number 1 and what track was number 1
+  number_ones <- data %>% 
+    pivot_longer(cols = -c("artist","track","date.entered"), names_to = "week", values_to = "place") %>%
+    filter(place == 1) %>%
+    select(artist, track) %>%
+    distinct()
+  
+  # weeks in charts
+  chart_weeks <- data %>%
+    pivot_longer(cols = -c("artist","track","date.entered"), names_to = "week", values_to = "place") %>%
+    drop_na() %>%
+    group_by(artist, track, date.entered) %>%
+    summarise(num_weeks = n()) %>%
+    ungroup()
+  
+  # combine output into one list object
+  billboard_output <- list(`Number of Songs` = num_songs,
+                           `Common Artists` = common_artists,
+                           `Number 1s` = number_ones,
+                           `Chart Length` = chart_weeks)
+  
+  # return output
+  return(billboard_output)
+}
+
+# use function
+billboard2000 <- summarise_billboard(df)
+
+# number of songs
+billboard2000$`Number of Songs`
+
+# common artists
+head(billboard2000$`Common Artists`)
+
+# number 1s
+head(billboard2000$`Number 1s`)
+
+# chart length
+head(billboard2000$`Chart Length`)
+
+```
+
+*Some material already exists from earlier workshops*
+
+### Functions with lapply
+
+Sometimes you may have many samples that need to first be cleaned or processed before you can integrate the results or compare between groups. This means a lot of the times there is a large chunk of repeated code for each sample which could be condensed and cleaner with using a loop. Particularly in bioinformatics where sequencing data for example needs to be standardized for number of cells or sequence reads per sample first before multiple samples can be compared with each other. Here is an example from a single cell RNA sequencing experiment.
+
+This experiment works by getting individual cells, breaking them open, taking all of the RNA from that individual cell and barcoding those RNA pieces so we know which cell they came from. Then we put all the RNA in a sequencer which reads the RNA as well as the barcode and constructs a matrix for each sample with all the cells as rows and all the columns as genes, in the cells of the matrix is the number of RNA sequences of a particular gene that were read in a particular cell.
+
+In this imaginary experiment we have 10 samples and each had slightly variable number of cells but exactly 10 million reads per sample. In the sequencer in each well (one sample per well) the reads are distributed randomly meaning if we have variation in cell number in the sample (which we always do) then we also get variation in the average number of reads per cell. Thus, how can we accurately compare if a cell has more reads than another cell if they have differences in the total reads in the cell. Is it that a gene is being expressed more in once cell or was there simply overall more sequencing done in one cell. TO get around this we first do a bit of pre-processing and standardize reads before trying to compare between samples/cells
+
+```{r, eval = FALSE}
+# Sample 1
+scRNAseq_sample_1 <- FindVariableFeatures(scRNAseq_sample_1, 
+                                          assay = "RNA", 
+                                          verbose = F)
+
+scRNAseq_sample_1 <- NormalizeData(scRNAseq_sample_1, 
+                                   assay = "RNA")
+
+scRNAseq_sample_1 <- ScaleData(scRNAseq_sample_1,
+                               assay = "RNA",
+                               vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                               verbose = F)
+
+# Sample 2
+scRNAseq_sample_2 <- FindVariableFeatures(scRNAseq_sample_2, 
+                                          assay = "RNA", 
+                                          verbose = F)
+
+scRNAseq_sample_2 <- NormalizeData(scRNAseq_sample_2, 
+                                   assay = "RNA")
+
+scRNAseq_sample_2 <- ScaleData(scRNAseq_sample_2,
+                               assay = "RNA",
+                               vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                               verbose = F)
+
+# Sample 3
+scRNAseq_sample_3 <- FindVariableFeatures(scRNAseq_sample_3, 
+                                          assay = "RNA", 
+                                          verbose = F)
+
+scRNAseq_sample_3 <- NormalizeData(scRNAseq_sample_3, 
+                                   assay = "RNA")
+
+scRNAseq_sample_3 <- ScaleData(scRNAseq_sample_3,
+                               assay = "RNA",
+                               vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                               verbose = F)
+
+# Sample 4
+scRNAseq_sample_4 <- FindVariableFeatures(scRNAseq_sample_4, 
+                                          assay = "RNA", 
+                                          verbose = F)
+
+scRNAseq_sample_4 <- NormalizeData(scRNAseq_sample_4, 
+                                   assay = "RNA")
+
+scRNAseq_sample_4 <- ScaleData(scRNAseq_sample_4,
+                               assay = "RNA",
+                               vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                               verbose = F)
+
+# Sample 5
+scRNAseq_sample_5 <- FindVariableFeatures(scRNAseq_sample_5, 
+                                          assay = "RNA", 
+                                          verbose = F)
+
+scRNAseq_sample_5 <- NormalizeData(scRNAseq_sample_5, 
+                                   assay = "RNA")
+
+scRNAseq_sample_5 <- ScaleData(scRNAseq_sample_5,
+                               assay = "RNA",
+                               vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                               verbose = F)
+
+# Sample 6
+scRNAseq_sample_6 <- FindVariableFeatures(scRNAseq_sample_6, 
+                                          assay = "RNA", 
+                                          verbose = F)
+
+scRNAseq_sample_6 <- NormalizeData(scRNAseq_sample_6, 
+                                   assay = "RNA")
+
+scRNAseq_sample_6 <- ScaleData(scRNAseq_sample_6,
+                               assay = "RNA",
+                               vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                               verbose = F)
+  
+```
+
+This work flow can be simplified using a list object and loops. This doesn't however, really change the run time as each sample is still processed sequentially. List apply, lapply(), just loops over each item in the list object and runs a fucntion on each object. This can be a function from base R or a loaded package or you can make your own!
+
+```{r, eval = FALSE}
+lapply(X = list_object, function(x){ 
+  #Insert function
+  }
+)
+```
+
+
+```{r, eval = FALSE}
+scRNAseq_list <- list("Sample 1" = scRNAseq_sample_1,
+                      "Sample 2" = scRNAseq_sample_2,
+                      "Sample 3" = scRNAseq_sample_3,
+                      "Sample 4" = scRNAseq_sample_4,
+                      "Sample 5" = scRNAseq_sample_5,
+                      "Sample 6" = scRNAseq_sample_6,)
+
+scRNAseq_list <- lapply(
+ X = scRNAseq_list,
+ FUN = function(x) {
+ 
+ x <- FindVariableFeatures(x, assay = "RNA", verbose = F)
+ 
+ x <- NormalizeData(x, assay = "RNA")
+ 
+ x <- ScaleData(x, assay = "RNA",
+                vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                verbose = F)
+ return(x)
+ }
+)
+```
+
+In more advanced applications this can be configured to be run in tandem using parallel computing but that is out of the scope of this workshop for now.
+
+### Data Manipulation
+
+Sometimes your data isn't in the right format for an analysis or a function. Copy-pasting your data into a different format, or double-entry, can lead to accidental data errors. It can be safer to use code to reformat or manipulate your data, as it will do this systematically and you can also use that script file or function as a record of what you did to your data.
+
+You will of course need to check that your code is performing as you desire (i.e. check you haven't made a mistake in coding). It can be useful to leave a version of your original data untouched, and make all manipulations on a *working* version.
+
+Here we will go over some of the ways you can manipulate your data (focusing on using data wrangling verbs from the tidyverse).
+
+### Extracting subsets from you data
+
+Data set input, manipulating form for different purposes (not need multiple copies to exist) different packages/functions need different formats, how to reformat for different purposes
+
+*Some material already exists from earlier workshops*
+
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
+
+

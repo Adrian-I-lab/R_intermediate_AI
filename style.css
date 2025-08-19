@@ -1,0 +1,22 @@
+/* style.css */
+
+/* Center align figures */
+.figure {
+  text-align: center;
+}
+
+/* Left-align figure captions */
+.caption {
+  text-align: start;
+}
+
+/* Limit the maximum width of the content */
+body {
+  margin: auto;
+}
+
+/* Make the content scrollable in the y-direction */
+pre {
+  overflow-y: auto;
+  max-height: 250px; /* Adjust the max-height as needed */
+}

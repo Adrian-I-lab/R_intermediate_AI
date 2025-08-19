@@ -1,0 +1,216 @@
+---
+title: "Draft plan reproducible analysis"
+format: html
+editor: visual
+---
+
+# Reproducible Analysis and Good Coding practices in R
+
+Currently just covering the broad themes we might want
+
+## Some Basics
+
+#### Version control
+
+It is important to keep track of, and report, the versions of R and R packages you used for analysis. Describing your R environment when things were calculated is required for reproducibility. If all you need is the version of R you are using, the builtin object `version` is a list of different character strings that include the R version number, date of release, and platform you are using R on (among other things). A more simple way to get the R version is the `getRversion()` function, and you can use it's return value to make comparisons (in case you want your code to do different things based on the version number). Finally, the `sessionInfo()` function returns more information about the R session at the time of running the function, including the version numbers of the loaded packages.
+
+-   Session Info and version
+
+```{r Session info}
+# Just R version 
+getRversion()
+# comparisons
+getRversion() >= "4.3.0"
+getRversion() >= "4.4.0"
+
+# more details about the R version. Note this is not a function
+version
+
+# details about your R session
+sessionInfo()
+```
+
+-   \^ already mentioned in existing workshops\*
+
+#### Package version control
+
+The R package system is designed to override existing versions of packages, with the aim that the user always has the latest version. *If you want to have multiple versions of a package on your device* then you will need to download them in different locations.
+
+You are likely already familiar with install packages using the `install.packages()` function. If you don't specify the `lib` argument, the default library location is used, with is the the first element (if there are multiple elements) of `.libPaths()`. You can change you library pathways, or install a package specifically at different library location, e.g. `install.packages('foo', lib = 'C:/User/Me/R/Library/Test')`.
+
+If you want to install an older version of a package, the `install_version()` function from the `remotes` package has this capability. The `remotes` package also has function designed to install packages from locations besides CRAN, including in devleopment versions from github.
+
+```{r package version}
+#| eval: false
+
+# to install a package
+install.packages("dplyr")
+
+# to install a package at a specific location
+install.packages("dplyr", lib = "C:/R/Libraries/Test")
+
+# to install a specific version
+library(remotes)
+remotes::install_version("dplyr", version = "1.0.7")
+```
+
+The Packages pane in RStudio lists the packages downloaded to your system, including a description, the version number, and a checkbox for if the have been libraries in to the session. this information can similarly be accessed through the function `installed.packages()`, which includes where the packages has been downloaded, dependencies, and other information. We recomment viewing the output from installed.packages()`through the`View()\` function in RStudio
+
+```{r view install paclages}
+#| eval: false
+
+# view installed packages
+View(installed.packages())
+
+```
+
+## Functions
+
+Just like we use functions from different packages to make a change to the environment or some input, we can write our own functions. This can be particular useful when we identify large sections of code that are repeated (i.e. copied, pasted, than changed slightly). By turning the repetitious code into a function, we can make our code tidier and easier to read, as well as reducing the risk of the code being incorrectly copied or updated.
+
+In the chunk of R code below, we create a function that calculates the length of the hypotenuse in a right-angled triangle (via the Pythagorean theorem, $c^2=a^2+b^2$ or $c=\sqrt(a^2+b^2)$). Firstly, we assign the function to an object called `pyth_func`. Inside the `function()` parentheses, we include what our function arguments are going to be. We can also decide to give the arguments default values (here we say `a` is 3 by default and `b` is 4 by default). Whenever we call the function `pyth_func()`, we can provide values for `a` and `b` (or use the default values). Inside the curly braces `{}` after the closing of the parenthesis, we include the code we want the function to perform each time we call it. In the case here, the function `pyth_func()` makes two objects (`a_sqrd` which is `a` squared, and `b_sqrd` which is `b` squared), then calculates the square root of the sum of those objects, the result of which is assigned to the object `c`. The object `c` is then the argument of the `return()` function, which is how the function `pyth_func()` knows what to output when it is called (i.e. the output of `pyth_func()` is `c`).
+
+While the first three lines of code in the `pyth_func()` function could all be done in one line (i.e. `c <- sqrt(a^2 + b^2)`), using the function as is highlights an important point: if something isn't printed to the screen or given as input to the `return()` function, then it will no longer exist once the main function has finished running. In the case of the `pyth_func()` function, once it has finished running the `a_sqrd` and `b_sqrd` objects won't exist in your environment.
+
+```{r basics of a function}
+#| eval: false
+
+# Pythagorean theorem, c^2=a^2 + b^2
+pyth_func <- function(a = 3, b = 4){
+  a_sqrd <- a^2
+  b_sqrd <- b^2
+  c <- sqrt(a_sqrd + b_sqrd)
+  return(c)
+}
+
+```
+
+You don't strictly *have* to use the `return()` function. If there is no `return()` function, the last thing that was printed to the console will be the output.
+
+Note also, you can only have one object as an argument in the `return()` function to be the output of your function. If your user written function creates many objects you want to have as output, this can be achieved by making a list with all the output as elements of that list.
+
+See the example below. The function `summarise_billboard()` summarizes a data set of Billboard top 100 hits, calculating multiple things of interest. The object that is returned from `summarise_billboard()` is a list object that contains: the number of songs in the charts that year, a collection of artists that had multiple hits, the tracks that reached number 1 on the charts, and how long each track was on the charts. This function could be used for Billboard top 100 data from any year (provided the data is provided in the same format).
+
+```{r more complex function}
+#| eval: false
+library(tidyverse)
+
+df <- billboard # song rankings on Billboards top 100 in the year 2000
+
+summarise_billboard <- function(data){
+  # summarise_billboard takes the billboard chart information from any year, and
+  # calculates summarises of the data
+  
+  # input: data is a dataframe with columns:
+  #           $ artist        [name of artist]
+  #           $ track         [name of track]
+  #           $ date.entered  [date entering the charts]
+  #           $ wk1           [ranking in first week on charts]
+  #           $ ...           [wk2, wk3, wk4, etc.]
+  
+  # output: list of 4 elements
+  #           $ Number of Songs  -  integer number of songs in charts
+  #           $ Common Artists   -  tibble dataframe with variable artist. 
+  #                                 Contains only artists with at least 3 songs 
+  #                                 in charts
+  #           $ Number 1s        -  tibble dataframe with variables artist and
+  #                                 track. Contains tracks that were number 1 
+  #                                 on the charts.
+  #           $ Chart Length     -  tibble dataframe with variables artist, track
+  #                                 date.entered, and num_weeks. The variable 
+  #                                 num_weeks is the number of weeks the track 
+  #                                 was in the charts.
+  
+  # number of songs on the chart
+  num_songs <- dim(data)[2]
+  
+  # artists with 3 or more songs in charts
+  common_artists <- data %>% 
+    group_by(artist) %>% 
+    mutate(num = n()) %>%
+    filter(num >= 3) %>%
+    ungroup() %>%
+    select(artist) %>%
+    distinct()
+  
+  # artists with a number 1 and what track was number 1
+  number_ones <- data %>% 
+    pivot_longer(cols = -c("artist","track","date.entered"), names_to = "week", values_to = "place") %>%
+    filter(place == 1) %>%
+    select(artist, track) %>%
+    distinct()
+  
+  # weeks in charts
+  chart_weeks <- data %>%
+    pivot_longer(cols = -c("artist","track","date.entered"), names_to = "week", values_to = "place") %>%
+    drop_na() %>%
+    group_by(artist, track, date.entered) %>%
+    summarise(num_weeks = n()) %>%
+    ungroup()
+  
+  # combine output into one list object
+  billboard_output <- list(`Number of Songs` = num_songs,
+                           `Common Artists` = common_artists,
+                           `Number 1s` = number_ones,
+                           `Chart Length` = chart_weeks)
+  
+  # return output
+  return(billboard_output)
+}
+
+# use function
+billboard2000 <- summarise_billboard(df)
+
+# number of songs
+billboard2000$`Number of Songs`
+
+# common artists
+head(billboard2000$`Common Artists`)
+
+# number 1s
+head(billboard2000$`Number 1s`)
+
+# chart length
+head(billboard2000$`Chart Length`)
+
+```
+
+*Some material already exists from earlier workshops*
+
+## Data Manipulation
+
+Sometimes your data isn't in the right format for an analysis or a function. Copy-pasting your data into a different format, or double-entry, can lead to accidental data errors. It can be safer to use code to reformat or manipulate your data, as it will do this systematically and you can also use that script file or function as a record of what you did to your data.
+
+You will of course need to check that your code is performing as you desire (i.e. check you haven't made a mistake in coding). It can be useful to leave a version of your original data untouched, and make all manipulations on a *working* version.
+
+Here we will go over some of the ways you can manipulate your data (focusing on using data wrangling verbs from the tidyverse).
+
+#### Extracting subsets from you data
+
+Data set input, manipulating form for different purposes (not need multiple copies to exist) different packages/functions need different formats, how to reformat for different purposes
+
+*Some material already exists from earlier workshops*
+
+## Version control
+
+-   git
+
+setting up git into R studio
+
+-   github
+
+## Reproducible reports and collections of work
+
+-   Quarto / RMarkdown output
+
+    -   producing different formats (word, pdf, html)
+
+        -   different package requirements for summaries and tables
+
+        -   understanding latex and yaml for pdf output
+
+    -   creating a book
+
+-   Projects in RStudio
+
+#### RStudio Projects

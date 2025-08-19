@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+renv/
+
+renv.lock
+
+Data/
+
+Outputs/
+
+R_objects/
