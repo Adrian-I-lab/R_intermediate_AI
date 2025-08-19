@@ -4,7 +4,7 @@ author: "Adrian Ilich"
 date: "`r Sys.Date()`"
 output:
  html_document:
-   css: style_wide.css
+   css: style.css
    code_folding: hide
    number_sections: true
    toc: true
@@ -24,15 +24,11 @@ Day 1 part 2: Play around with our quarto/markdown to see which output and style
 
 Day 2 part 1: Pull from GitHub to get our project files again. Play with functions, lapply. Push and commit to github. 
 
+*note* maybe we just run the first part like a normal tutorial but tell them at the start they will need to do everything themselves at the end when we give them a project?
+
 Day 2 part 2: Try for yourselves, give them a scenario, dataset and goal e.g. I want to visualise my data and do some certain stats test to get the p-value. Start from scratch make a new project, renv packages, open a markdown file write the analysis, export the HTML output for your client.
 
-## New client has called - You have been employed!
 
-Scenario: Music producer wants to revive Y2K music and aesthetics and has employed you to perform statistical analysis on the billboard hottest 100 songs of the year 2000. You are to analyse the data and come up with best performing artists, songs, and identify trends in streams per week throughout the year. which artists had the most played songs? Which songs had the longest streaks over the year? Which songs had the highest number of streams in a single week?
-
-All this info will help the producer man come up with the next hit song which will revive Y2K aesthetics in pop-culture.
-
-As a qualified statistician you are going to use reproducible coding practices to create and document your analysis and give your findings in the form of a HTML report to the producer.
 
 ## Step 1: set up your project and make sure things will be reproducible
 
@@ -123,7 +119,7 @@ Now we need to configure settings for git such as our user and email.
 
 If you use a private email address with GitHub, then you can use GitHub’s no-reply email address for the user.email value. It looks like ID+username@users.noreply.github.com. You can look up your own address in your GitHub email settings. Otherwise you can use your private email or your QIMR email too. It doesnt really matter.
 
-```{bash}
+```{bash, eval = F}
 git config --global user.name "adrian ilich"
 git config --global user.email "adrian.ilich@qimrb.edu.au"
 
@@ -149,8 +145,11 @@ these updated settings will stay default for all future git projects on this acc
 
 make sure you are in your R project folder. Then run the following command to create a git file for this folder:
 
-```{bash}
+```{bash, eval = F}
+# Makes the .git file
 git init
+# Sets the branch we are on to main, which is already default but just in case
+git branch -M main
 ```
 
 ### Git Step 3: set up github remote
@@ -160,19 +159,21 @@ make github repo if you haven't already (Should be empty no read me and no .giti
 in repo page click on green code button, in local under clone click ssh and copy the link into the command below
 
 
-```{bash}
+```{bash, eval = F}
+# Add origin(or branch) which is actually just the link to the github repo page
 git remote add origin git@github.com:Adrian-I-lab/R_intermediate_AI.git
-# Check command worked
+# Check command worked, should show the github ssh name for fetch and push 
 git remote -v
 ```
 ### Git Step 4: Set SSH pair (this is the password to link to your github)
 
-Make SSH key pair. Do in terminal as it asks for interaction which cant be done in R markdown chunk and just freezes your rstudio session. It will ask for file name, then password, then confirm password. Just press enter 3 times for default file name and no password. This will make an ssh key in your user folder on the computer in the secret .ssh/ folder:
+Make SSH key pair. This is essentially an encrypted password so that only this comuter and session can actually connect to the github repository. Keeps things extra safe works for private and public repositories. In fact its always needed. 
+
+Do the following step in the rstudio terminal as it asks for interaction/response which cant be done in R markdown chunk and just freezes your rstudio session. It will ask for file name, then password, then confirm password. Just press enter 3 times for default file name and no password. This will make an ssh key in your user folder on the computer in the secret .ssh/ folder:
 e.g. C:/Users/AdrianI/.ssh/id_ed25519 
 
 
-
-```{bash}
+```{bash, eval = F}
 # Interactive run in terminal
 ssh-keygen -t ed25519 -C "adrian.ilich@qimrb.edu.au"
 ```
@@ -180,7 +181,7 @@ ssh-keygen -t ed25519 -C "adrian.ilich@qimrb.edu.au"
 ### Git Step 5: tell github the password  
 We have an ssh key pair but we need to give one of the two files to github. We always give the public file not the private key. to get it run the following command and then cimply copy the output text:
 
-```{bash}
+```{bash, eval = F}
 cat C:/Users/AdrianI/.ssh/id_ed25519.pub
 # but change folder to your name
 ```
@@ -188,7 +189,7 @@ once you have copied the key go into github. Go into your github settings (NOT T
 
 Now lets set up the link between our R project and github repository. RUn in terminal again as it also requires interaction. it will ask you are you sure you want to continue connecting, just type "yes".
 
-```{bash}
+```{bash, eval = F}
 # Interactive run in terminal
 ssh -T git@github.com
 ```
@@ -198,7 +199,7 @@ ssh -T git@github.com
 
 Now we have set up git and github and should be ready to go. As mentioned this set up is only done once, from now on you really only use those 5 key functions to push and pull from your files to github and back. Lets try:
 
-```{bash}
+```{bash, eval = F}
 # Check what is changed in our files from our .git file
 git status
 ```
@@ -226,42 +227,38 @@ R_objects/
 Now none of these files or folders will ever be added to git/github. As your project progresses remeber to always check each time you go to add using git status if there is any kind of file or folder that shouldnt be there and upfdate this gitignore file accordingly.
 
 Lets check again to make sure its all safe to commit now:
-```{bash}
+```{bash, eval = F}
 git status
 ```
 
-Now lets add and commit:
+Everything looks okay so now lets add and commit:
 
-```{bash}
+```{bash, eval = F}
 git add . # The dot means add everything in folder, if you want to add a specific file you can put file name here
 ```
 
-remember now we have added it to the git file buit its not saved (open word document not saved analogy). To save we need to commit and every commit, since they are all saved and viewable forever, needs to have a comment explainign what the change is. Make the comment useful to someone who doesnt knwo what you are doing, or your future self whom forgot what this script was even for. Commenting is best done when you describe the change and effect and even sometimes reason why you did that. 
+remember now we have added it to the git file but its not saved (an open word document which you have not saved analogy). To save the added changes on the git file we need to commit, and every commit, since they are all saved and viewable forever, needs to have a comment explaining what the change is. Make the comment useful to someone who doesn't know what you are doing, or your future self whom forgot what this script was even for. Commenting is best done when you describe the change and effect and even sometimes reason why you did that. 
 
-e.g. line 27 changed is a bad comment while updated color scheme and font size on figure 1 bar plot is better comment
+e.g. "line 27 changed" is a bad comment. "updated color scheme and font size on figure 1 bar plot" is better comment. "Updated figure 1 bar plot from set1 to set2 colour scheme to match grant requirements and increased font size of axis titles for visability" Is even better.
 
 lets commit our changes. Initial commit comments usually arent that important since we havent done too much yet
 
-```{bash}
+```{bash, eval = F}
 git commit -m "Initial commit. Made R project, git, and github"
 ```
 
 Now this all saved on our git file and some people do stop here but its highly NOT recommended. Its much safer to push to github and keep a backup of everything there. I have accidently deleted an entire project folder on the HPC including the .git file which I hadnt pushed to github in months and essentially lost almsot half a year worth of scripts. Ever since then I push my git file at the end of every work day.
 
-```{bash}
-git push -u origin master
+```{bash, eval = F}
+git push -u origin main
 ```
-
-
-
-
-
-
-
+Now you can go check your github page and you should see everything is there with your commit comments previewed as well.
 
 ## Step 4: Set up the YAML chunk for the Rmarkdown
 
-R markdown file, unlike normal .R script file, can be rendered into a report e.g. pdf, docx or html files.
+Now we have our project and github set up, its time to start working. Lets start by making a new markdown file where we will write our code and keep all our analysis notes.
+
+An R markdown file, unlike normal .R script file, can be rendered into a report e.g. pdf, docx or html files. The output and style settings of the doumetn are always mentioned at the top of the markdown in whats called a YAML chunk. In this chunk you give a bunch of parameters and settings that are employed when you render your document. Here are two examples, one for a HTML report and one for a PDF report.
 
 Example HTML file YAML
 ```         
@@ -295,8 +292,10 @@ output:
 
 ### Rmarkdown YAML section notes:
 
+You can add heaps of things in your YAML here we list many of the important and frequently used settings but there are even more than this out there.
 
-1. Document Metadata
+
+*1. Document Metadata*
 
 Beyond title, author, date, and output, you can also specify:
 
@@ -315,7 +314,7 @@ csl: Citation style language file (e.g., APA, Nature).
 link-citations: true/false to hyperlink in-text citations to the bibliography.
 
 
-2. Output Customisation
+*2. Output Customisation*
 
 Each output format can have nested options. For example:
 
@@ -330,7 +329,7 @@ output:
     number_sections: true
 
 
-3. Code & Chunk Options
+*3. Code & Chunk Options*
 
 These affect how code and results are shown:
 
@@ -345,7 +344,7 @@ error: Show errors instead of stopping render.
 code_download: Provide a download link for source code.
 
 
-4. Figure & Table Options
+*4. Figure & Table Options*
 
 fig_width / fig_height: Control figure size.
 
@@ -356,7 +355,7 @@ fig_align: Left, centre, right.
 df_print: Control table printing style (e.g., kable, paged).
 
 
-5. Navigation & Structure
+*5. Navigation & Structure*
 
 toc_depth: Depth of TOC expansion.
 
@@ -367,7 +366,7 @@ anchor_sections: Adds anchors to headings for linking.
 linkcolor / urlcolor (LaTeX): Style hyperlinks.
 
 
-6. Interactivity (HTML only)
+*6. Interactivity (HTML only)*
 
 code_folding: "show", "hide", or "none".
 
@@ -380,7 +379,7 @@ self_contained: true/false (embed or link assets).
 mathjax: For rendering equations.
 
 
-7. Advanced / Package-Specific
+*7. Advanced / Package-Specific*
 
 runtime: For interactive execution (e.g., shiny, shiny_prerendered).
 
@@ -398,7 +397,7 @@ In the R markdown now that we have made the YAML lets start populating the docum
 
 Normally I follow this template roughly
 
-```{r}
+```{r, eval = F}
 # Introduction
 ## Experiment/data
 ## Research QUestions/aims
@@ -413,10 +412,13 @@ Normally I follow this template roughly
 ### Step 2.1 
 # etc...
 
+# conclusions/findings summary
+
+# session info
 ```
 
 
-### renv and Version control
+### Packge version control (and renv)
 
 It is important to keep track of, and report, the versions of R and R packages you used for analysis.
 
@@ -426,7 +428,7 @@ Describing your R environment when things were calculated is required for reprod
 
 -   Session Info and version
 
-```{r Session info}
+```{r Session info, eval = F}
 # Just R version 
 getRversion()
 # comparisons
@@ -483,15 +485,29 @@ renv::init()
 ```
 
 
-If renv.lock pins package X at version 1.2.3 but you want 1.3.0:
+*side note*: if you are at QIMR your computer will likely have internet access issues in R studio due to the QIMR firewalls. To use renv you need to first install curl and stringr on your computer from CRAN. The you can initiate renv and transfer the installed packages from your computer to the renv library folder using hydrate. once those are installed on renv you can run Satomi's Proxy_Settings_R.R script to be able to connect to the internet. IF you get errors with the file try maually altering the script to have your name as first.last. If you still get an error try typing in your password already URL encoded. example code below:
 
-Install explicitly:
+```{r, eval = F}
+# How to get around QIMR proxy issues in R Studio
+install.packages("curl")
+install.packages("stringr")
+renv::init()
 
+# Use hydrate to get packages that were already in your library on your computer e.g. on work computer proxy blocks renv from installing so you need to hydrate curl and Stringr before running Satomi's proxy
+renv::hydrate(packages = 'curl',sources = 'C:/Program Files/R/R-4.4.1/library')
+renv::hydrate(packages = 'stringr',sources = 'C:/Program Files/R/R-4.4.1/library')
 
-```{r, eval = FALSE}
-renv::install("package@1.3.0")
+# Run proxy script. Email us if you do not have it.
+source("path/to/Proxy_Settings_R.R")
 ```
 
+From there renv should work as normal and be able to install any bioconductor or CRAN package with renv::install("XXX")
+
+If you are installing packages and renv.lock pins package X at version 1.2.3 but you want 1.3.0 you can Install specific versions explicitly:
+
+```{r, eval = FALSE}
+renv::install("packageX@1.3.0")
+```
 
 Then update the lockfile with:
 
@@ -499,17 +515,8 @@ Then update the lockfile with:
 renv::snapshot()
 ```
 
-Use hydrate to get packages that were already in your library on your computer e.g. on work computer proxy blocks renv from installing so you need to hydrate curl and Stringr before running Satomi's proxy code:
 
-`source("L:/Lab_Stats_Unit/Adrian/Proxy_Settings_R.R")`
-
-```{r}
-renv::hydrate(packages = 'curl',sources = 'C:/Program Files/R/R-4.4.1/library')
-renv::hydrate(packages = 'stringr',sources = 'C:/Program Files/R/R-4.4.1/library')
-```
-
-
-This will replace the pinned version. However, this is not recommended maybe only do this during inital installations of packages but once you have started some analysis dont do this as changing versions may result in your code no longer working or havign compatibility issues.
+This will replace the pinned version. However, this is not recommended maybe only do this during inital installations of packages but once you have started some analysis dont do this as changing versions may result in your code no longer working or having compatibility issues.
 
 To deactivate renv in a project, use `renv::deactivate()`. This removes the renv auto-loader from the project .Rprofile, but doesn’t touch any other renv files used in the project. If you’d like to later re-activate renv, you can do so with `renv::activate()`.
 
@@ -518,6 +525,14 @@ To completely remove renv from a project, call `renv::deactivate(clean = TRUE)`.
 ### Package and software version control 
 
 If you use other software than R, e.g. you can use reticulated to write in bash, python, and R all in the same R markdown document. For this renv doesn't work anymore as it only covers the R packages. When things get more complicated you will need to start using and building containers. This is out of the scope of what we do here but its good for you all to know this exists and they are essentially just renv but for everything and anything so you can control python, r and bash based packages and libraries all at once. 
+
+*Checklist:*
+
+- Have Rproject, with all folders set up, and linked to git and github
+- Have set up an R markdown file to work in
+- Initiated renv to control package versions in your project
+
+Now we are ready to start coding!
 
 ## Step 6: Learning some more advanced coding skills
 
@@ -549,7 +564,7 @@ Note also, you can only have one object as an argument in the `return()` functio
 See the example below. The function `summarise_billboard()` summarizes a data set of Billboard top 100 hits, calculating multiple things of interest. The object that is returned from `summarise_billboard()` is a list object that contains: the number of songs in the charts that year, a collection of artists that had multiple hits, the tracks that reached number 1 on the charts, and how long each track was on the charts. This function could be used for Billboard top 100 data from any year (provided the data is provided in the same format).
 
 ```{r more complex function}
-#| eval: false
+# eval: false
 library(tidyverse)
 
 df <- billboard # song rankings on Billboards top 100 in the year 2000
@@ -640,7 +655,9 @@ Sometimes you may have many samples that need to first be cleaned or processed b
 
 This experiment works by getting individual cells, breaking them open, taking all of the RNA from that individual cell and barcoding those RNA pieces so we know which cell they came from. Then we put all the RNA in a sequencer which reads the RNA as well as the barcode and constructs a matrix for each sample with all the cells as rows and all the columns as genes, in the cells of the matrix is the number of RNA sequences of a particular gene that were read in a particular cell.
 
-In this imaginary experiment we have 10 samples and each had slightly variable number of cells but exactly 10 million reads per sample. In the sequencer in each well (one sample per well) the reads are distributed randomly meaning if we have variation in cell number in the sample (which we always do) then we also get variation in the average number of reads per cell. Thus, how can we accurately compare if a cell has more reads than another cell if they have differences in the total reads in the cell. Is it that a gene is being expressed more in once cell or was there simply overall more sequencing done in one cell. TO get around this we first do a bit of pre-processing and standardize reads before trying to compare between samples/cells
+In this imaginary experiment we have 10 samples and each had slightly variable number of cells but exactly 10 million reads per sample. In the sequencer in each well (one sample per well) the reads are distributed randomly meaning if we have variation in cell number in the sample (which we always do) then we also get variation in the average number of reads per cell. Thus, how can we accurately compare if a cell has more reads than another cell if they have differences in the total reads in the cell. Is it that a gene is being expressed more in once cell or was there simply overall more sequencing done in one cell. TO get around this we first do a bit of pre-processing and standardize reads before trying to compare between samples/
+
+No actual data here just example from my code:
 
 ```{r, eval = FALSE}
 # Sample 1
@@ -757,7 +774,7 @@ scRNAseq_list <- lapply(
 )
 ```
 
-In more advanced applications this can be configured to be run in tandem using parallel computing but that is out of the scope of this workshop for now.
+It is much eaasier and cleaner to read this lapply() code compared to the expanded example above. In more advanced applications this can be configured to be run in tandem using parallel computing but that is out of the scope of this workshop for now. Extra reading about "future" package if you want to learn more.
 
 ### Data Manipulation
 
@@ -767,12 +784,525 @@ You will of course need to check that your code is performing as you desire (i.e
 
 Here we will go over some of the ways you can manipulate your data (focusing on using data wrangling verbs from the tidyverse).
 
+Load tidyverse & dataset:
+
+```{r}
+library(tidyverse)
+data("starwars")  # built-in dataset, fun and messy
+```
+
+*Core verbs*
+Introduce select(), filter(), mutate().
+
+select(): choose variables
+filter(): subset rows
+mutate(): create new variables
+
+```{r}
+starwars %>% select(name, height, mass)
+```
+
+```{r}
+starwars %>% filter(species == "Human", gender == "masculine")
+```
+
+```{r}
+starwars %>% mutate(bmi = mass / (height/100)^2)
+```
+
+This is how you’d extract only the relevant patient variables, filter out missing data, and calculate new clinical measures like BMI. They are the core verbs of data wrangling you will likely use a lot.
+
+*Summarising*
+
+Introduce group_by() + summarise().
+
+```{r}
+starwars %>%
+  filter(!is.na(height), !is.na(mass)) %>%
+  mutate(bmi = mass / (height/100)^2) %>%
+  group_by(gender) %>%
+  summarise(mean_bmi = mean(bmi, na.rm = TRUE),
+            n = n())
+```
+
+
+The function `count()` is shorthand for frequencies. E.g. This is like giving the average height per demographic group in a survey.
+
+*Reshaping*
+
+Introduce pivot_longer() and pivot_wider(). starwars wasn't good for this so lets made a dummy data frame.
+
+```{r}
+df <- tibble(id = 1:2, glucose_day1 = c(85, 90), glucose_day2 = c(100, 110))
+
+df %>%
+  pivot_longer(cols = starts_with("glucose"),
+               names_to = "day",
+               values_to = "glucose")
+```
+
+normally wide to long is better for tidy formats and ggplot, but you might want to go long to wide for certain functions or when printing data tables for reports.
+
+Other useful functions are: `rename()`, and `arrange()`.
+
+```{r}
+# Original names
+starwars %>% select(name, birth_year, homeworld) %>% head()
+
+# Rename columns
+starwars %>%
+  rename(
+    person = name,       # new_name = old_name
+    yob    = birth_year
+  ) %>%
+  select(person, yob, homeworld) %>%
+  head()
+```
+
+This is like renaming patient_id → id or bp_sys → systolic to make your dataset clearer before analysis.
+
+```{r}
+# Sort characters by height
+starwars %>%
+  select(name, height, mass) %>%
+  arrange(height) %>%   # ascending order
+  head()
+
+# Sort by mass in descending order
+starwars %>%
+  select(name, height, mass) %>%
+  arrange(desc(mass)) %>%
+  head()
+```
+
+This is like arranging patients by age or glucose level to quickly spot extremes or to prepare a clean table for a report. Also very commonly used in bioinformatics if for example you want to list the top differentially expressed genes between your treatment and control groups.
+
+### Activity: test your tidyverse skills
+
+1. Make a new df based on starwars with only name, species, homeworld, by using `Select()`.
+
+2. Filter starwars to print only humans from Tatooine and in order of mass values from heaviest to lightest.
+
+3. Calculate average height per species in the starwars df.
+
 ### Extracting subsets from you data
 
 Data set input, manipulating form for different purposes (not need multiple copies to exist) different packages/functions need different formats, how to reformat for different purposes
 
 *Some material already exists from earlier workshops*
 
+### Modular Code
+
+modular coding refers to making sections or even individual scripts to run parts of the overall pipeline. Each of these sections or scripts can be sequenced together to form the full pipeline. It might seem like extra work than just running everything from start to finish but for large piplines its incredibly useful as you know e.g. an error came from script 4 instead of you know there was some kind of error probably somewhere in the middle of you 10,000 line script of code...
+
+Also you can update and rearrange certain modules or start and stop your pipeline in different sections. This can be useful if e.g. one function in your pipeline take 500gb ram and needs parallel computing while the other 10 scripts/modules in your pipeline only need 32gb ran and one core. Running this in modules means you can free up space on the HPC and only request what you need for each section of your pipeline.
+
+All you really need to do to make your analysis pipeline modular is adding saveRDS and readRDS checkpoints throughout your pipeline. e.g. I am analyzing single cell data:
+
+raw sequencing data-->
+Script 1: load raw data and do QC, save R_object1
+
+R_object1-->
+Script 2: load R_object1 do dimensionality reduction, save R_object2
+
+R_object2-->
+Script 3: load R_object2 do clustering analysis and naming, save R_object3
+
+R_object3-->
+Script 4: Load R_object3 do differential gene expression analysis and find enriched molecular pathways that are occurring between control and treatment groups (get DEGs and run KEGG enrichment), save R_object4
+
+this way If I want to change my clustering or try adjust dimensionality reduction parameters I don't need to run everything from scratch, which can take hours, but instead load the last checkpoint and go from there. As long as you are using good practices, keeping same package versions using renv and consistently using git there should be no reproducibility issues with this and it will make your life so much easier.
+
+In more advanced applications this can become very large with many modules and it can be helpful to have a better way of keeping track of these modules within the overall pipeline. This can be done with a pipeline manager such as snakemake. Outside of the scope of this workshop but additional reading here:
+https://snakemake.readthedocs.io/en/stable/
+
+# Step 7: Your assignment
+
+Choose project: Statistics or Bioinformatics (single cell seq)
+
+To do the data analysis you need to follow all the steps we learned today to complete and R based project. Then you need to send the report and results to your client. To summaries that means:
+
+1. create and R project 
+2. set up all your files and folders in the project
+3. set up a git in your project
+4. set up a github repository
+5. link your Rporject git and github
+5. Make your Rmarkdown document (set up the YAML chunk and headings)
+6. Set up renv and install needed packages
+7. Follow the data analysis steps for which ever project you chose
+8. render your report
+9. add and commit to git and push to your github
+10. send your github and data report to your client
+
+## Bioinformatics Project: Find cell populations in pbmcs
+
+Whole blood (PBMC = Peripheral Blood Mononuclear Cell) samples were taken from a human patient and 2700 cells were sequenced using scRNAseq 10X technology. First lets load data in, it was downloaded from Seurat website: PBMC 3k guided tutorial vignette. (https://satijalab.org/seurat/articles/pbmc3k_tutorial)
+
+```{r}
+library(Seurat)
+# load the data in:
+pbmc.data <- Read10X(data.dir = "C:/Users/AdrianI/Downloads/pbmc3k_filtered_gene_bc_matrices.tar/pbmc3k_filtered_gene_bc_matrices/filtered_gene_bc_matrices/hg19/")
+```
+
+The Seurat package has its own R object type which stores the counts matrix in one place and the metadata for each cell in another place. Think of it like a special and more complicated list object. Now we have the counts matrix data (i.e cells as columns and genes as rows, RNA counts per gene per cell as data in the matrix cells) we can use it to create our Seurat object. All future Seurat functions work from/on this object!
+
+```{r}
+pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells = 3, min.features = 200)
+pbmc
+```
+
+Quality control steps, we need to only keep good quality cells that represent the real population in vivo. Unfortunately, the experiment to get the sequencing data is quite rough and not perfect so you always end up with some dead/dying cells and also technical artifacts or ambient contamination RNA. TO deal with this we remove low quality cells based on filter cut off values. If a cell has more than 5% mitochondrial genes its considered apoptotic so we will remove. If a cell has less than 200 genes it likely is not a real cell, i.e. contamination of RNA in the experimental steps, or something is wrong with the cell so we will also remove these.
+
+All human mitochondrial genes start with "MT..." so we can find the percentage of them in each cell using this function
+The [[ operator can add columns to object metadata. This is a great place to stash QC stats
+
+```{r}
+# making a percent.mt metadata column ad adding percent mitochindiral genes per cell as a value.
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
+```
+
+Now we can plot the percentage mitochondrial genes per cell (percent.mt) as well as number of genes per cell (nFeature_RNA) as a violin plot. cut offs are less than 5% mito genes and more than 200 unique genes per cell.
+
+```{r}
+# Visualize QC metrics as a violin plot
+VlnPlot(pbmc, features = c("nFeature_RNA", "percent.mt"), ncol = 2)
+```
+
+now we need to actually remove these cells that do not pass the cut offs
+
+```{r}
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & percent.mt < 5)
+```
+
+Now that we are happy with our cells lets normalise the counts. The best way to do this is using SCTransform for singel cell data but for simplicity we will just use a log transformation.
+
+```{r}
+pbmc <- NormalizeData(pbmc)
+```
+
+Once we have done a log transformation we then do a linear scaling to shift the expression of each gene to 0 and variance in expression of each gene to 1. we also find the top 2000 variable features (i.e. the 2000 genes with the most variation in gene epxression levels across the cells) which is needed for future steps
+
+```{r}
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+```
+
+Now that the data has undergone a linear transformation we are able to perform linear dimensionality reduction by doing Principal component analysis (PCA) on the scaled data. 
+
+```{r}
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+```
+
+Lets visualise the PCA plot now
+
+```{r}
+DimPlot(pbmc, reduction = "pca") + NoLegend()
+```
+
+Next we should inspect the principal components of the data to only select the top PCs that represent the majority of the variation in the data. This allows us to compress the data set for further dimensionality reduction, only taking the components that seem to represent actual variation in gene expression and not technical or redundant variation between cells. we can visualize this using an elbow plot which plots the standard deviation of each principal component:
+
+```{r}
+ElbowPlot(pbmc)
+```
+
+It seems that the PC components plateau around PC 10 so we will use PCs 1:10 for further dimensionality reduction. Before this we will run the `FindNeighbors()` function which is a function that, using the euclidean distances in the PCA space we just found, calculates the edge weights between any two cells based on Jaccard similarity (the shared overlap in the local neighborhoods). In layman's terms it just finds which cells are similar (i.e. close together on PCA) and which cells are less similar (further apart) and ranks them as closest together to furthest apart.
+
+Once we have that neighbours value, those values are used to then determine clusters of cells I.e. a gorup of cells that are closer to each other than other cells. the resolution we choose is sort of like a cut off on this clustering where low resolution gives fewer clusters and higher resultions give more clusters.
+
+```{r}
+pbmc <- FindNeighbors(pbmc, dims = 1:10)
+pbmc <- FindClusters(pbmc, resolution = 0.5)
+```
+
+Now that we have our cluster values we should try to visualise them. However, the PCA plot doesnt seem to show the variation well so we should try doing further dimensionality reduction to emphasise these subarchetecture and clustering of or cells. To do this we can run UMAP or uniform manifold approximation and projection. UMAP then takes those PC numbers for each cell and tries to draw a map in 2D space.
+
+
+```{r}
+pbmc <- RunUMAP(pbmc, dims = 1:10)
+```
+
+now lets visualise
+
+```{r}
+# note that you can set `label = TRUE` or use the LabelClusters function to help label
+# individual clusters
+DimPlot(pbmc, reduction = "umap")
+```
+
+Now Lets use some known cell type markers to try and find what each of these clusters is:
+
+*Markers	--> Cell Type*
+
+IL7R, CCR7 -->	Naive CD4+ T cell
+CD14, LYZ	--> CD14+ Monocyte cells
+IL7R, S100A4 -->	Memory CD4+ T cell
+MS4A1	---> B cells
+CD8A	--> CD8+ T cells
+FCGR3A, MS4A7 -->	FCGR3A+ Monocyte cells
+GNLY, NKG7 -->	NK cells
+FCER1A, CST3 -->	Dendritic cells
+PPBP -->	Platelets
+
+Lets have a go at visualising expression of these markers in each UMAP cluster
+
+```{r}
+VlnPlot(pbmc, features = c("MS4A1", "CD79A"))
+```
+Now you try for the rest of them.
+
+At the end of the report summarise what cell type each cluster contains. Bonus problem, try to chnage the cluster names and reprin the UMAP with the updated cell type names.
+
+
+## Statistics Project: Does our new drug have off target effects on blood pressure?
+
+*Scenario & Question*
+You’ve just been contracted as a statistical consultant by a public health laboratory in India. The lab has been running a large survey of adults in their city, measuring health indicators like glucose, BMI, insulin, and age. Now, the lab director wants your help:
+
+Brief from the Director:
+“We need to understand which of these factors best predict whether someone is diagnosed with diabetes. Please run a proper statistical analysis, give us odds ratios so clinicians can interpret the risks, and check how well the model predicts diabetes using ROC curves and AUC.”
+
+This is your job. Let’s step through the workflow together.
+
+*Step 1: Load the data*
+
+The lab has given us access to a dataset. To simulate their survey, we’ll use the well-known Pima Indians Diabetes dataset from the mlbench package.
+
+```{r}
+# Load required packages
+#install.packages("mlbench")
+library(mlbench)
+#install.packages("tidyverse")
+library(tidyverse)
+library(broom)
+#install.packages("pROC")
+library(pROC)
+#install.packages("caret")
+library(caret)
+#install.packages("car")
+library(car)                 # for VIF
+#install.packages("ResourceSelection")
+library(ResourceSelection)   # for Hosmer–Lemeshow test
+
+# Load dataset
+data("PimaIndiansDiabetes2")
+df <- PimaIndiansDiabetes2
+
+summary(df)
+```
+
+At this stage, think of yourself as opening the lab’s Excel sheet for the first time. You’re scanning it for missing values, strange encodings, or anything suspicious. Notice that missing values are recorded as NA, not zeros, good, that means we don’t need to guess what “0” really means (e.g., is a BMI of 0 realistic?).
+
+*Step 2: Clean the dataset*
+
+We’ll remove rows with missing values in the variables we care about.
+
+```{r}
+df_complete <- df %>% drop_na(glucose, insulin, mass, age, diabetes)
+summary(df_complete)
+```
+
+Why this matters: A clinician cannot interpret results if they come from messy or inconsistent data. In real life, we might impute missing values, but for this workshop we’ll keep it simple and use only complete cases.
+
+*Step 3: Explore the data*
+
+As the lab’s statistician, your first task is to understand the survey population.
+
+```{r}
+# Outcome balance
+df_complete %>% count(diabetes)
+
+# Distributions by outcome
+df_long <- df_complete %>%
+  pivot_longer(c(glucose, insulin, mass, age), names_to = "var", values_to = "value")
+
+ggplot(df_long, aes(value, fill = diabetes)) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  facet_wrap(~ var, scales = "free") +
+  theme_minimal()
+
+# Bivariate relationships
+ggplot(df_complete, aes(glucose, mass, colour = diabetes)) +
+  geom_point(alpha = 0.7) +
+  theme_minimal()
+```
+
+This is like the “first meeting” with your data. You should check:
+
+1. How many people have diabetes vs. how many don’t.
+
+2. Whether glucose, BMI, insulin, or age distributions differ visibly between groups.
+
+3. Outliers: are there extreme values that could distort results? Even if there are should we remove them?
+
+Think of it like being a detective before running the trial in court — you’re gathering evidence before making a claim.
+
+*Step 4: Split into training and testing sets*
+
+As professionals, we must test our model on new data to see if it generalises. That’s why we split the dataset into 70% training (to build the model) and 30% testing (to evaluate it).
+
+```{r}
+set.seed(2025)
+train_ix <- caret::createDataPartition(df_complete$diabetes, p = 0.7, list = FALSE)
+train <- df_complete[train_ix, ]
+test  <- df_complete[-train_ix, ]
+```
+
+This mimics the real-world scenario. You would first train your statistical model on part of the survey data, then later check if it predicts well on a new batch of patients.
+
+*Step 5: Fit logistic regression*
+
+Now we answer the director’s question: “Which factors predict diabetes?”
+Since diabetes is a yes/no outcome, logistic regression is the correct statistical tool.
+
+```{r}
+fit <- glm(diabetes ~ age + glucose + mass + insulin,
+           data = train, family = binomial)
+
+summary(fit)
+```
+
+Here we’re estimating how each predictor changes the odds of having diabetes, while controlling for the others.
+
+*Step 6: Report Odds Ratios (ORs) with Confidence Intervals*
+
+Doctors don’t like log-odds. They want odds ratios e.g. how much the risk changes per unit of glucose/BMI/etc.
+
+```{r}
+or_tab <- broom::tidy(fit, conf.int = TRUE, exponentiate = TRUE) %>%
+  mutate(across(estimate:conf.high, ~ round(.x, 3))) %>%
+  select(term, OR = estimate, `2.5%` = conf.low, `97.5%` = conf.high, p.value)
+
+or_tab
+```
+
+
+Glucose: OR tells us how much the odds of diabetes increase per 1 mg/dL rise.
+
+BMI: OR tells us how much per 1 kg/m² increase.
+
+Age and Insulin: we’ll interpret based on whether they’re significant.
+
+*Step 7: Improve interpretability*
+
+Instead of reporting “per 1 unit increase,” we can scale variables to clinically meaningful increments (e.g., 10 mg/dL of glucose).
+
+```{r}
+train_scaled <- train %>%
+  mutate(glucose10 = glucose / 10,
+         BMI5     = mass / 5)
+
+fit_scaled <- glm(diabetes ~ age + glucose10 + BMI5 + insulin,
+                  data = train_scaled, family = binomial)
+
+broom::tidy(fit_scaled, conf.int = TRUE, exponentiate = TRUE)
+```
+
+*Step 8: Check multicollinearity*
+
+Doctors may ask: “Are glucose and insulin too correlated to be used together?”
+We can check with the Variance Inflation Factor (VIF).
+
+```{r}
+car::vif(fit) # values > ~5–10 suggest concern
+```
+
+*Step 9: Evaluate predictive performance (ROC/AUC)*
+
+It’s not enough to say “glucose predicts diabetes.” We need to check how well the model discriminates.
+
+```{r}
+test$pred_prob <- predict(fit, newdata = test, type = "response")
+
+roc_obj <- pROC::roc(response = test$diabetes,
+                     predictor = test$pred_prob,
+                     levels = c("neg", "pos"),
+                     direction = "<")
+
+auc(roc_obj)
+ci.auc(roc_obj)
+plot(roc_obj, print.auc = TRUE, legacy.axes = TRUE, main = "ROC — Logistic Model")
+```
+
+
+AUC close to 0.5 → useless model.
+
+AUC close to 1 → excellent discrimination.
+
+Clinicians like to see this curve because it tells them how well your model separates “disease” from “no disease.”
+
+*Step 10: Decision thresholds*
+
+Clinicians need to know when to call someone “at risk.” The ROC curve lets us pick an optimal threshold (often using Youden’s J).
+
+```{r}
+opt <- coords(roc_obj, x = "best", best.method = "youden",
+              ret = c("threshold", "sensitivity", "specificity"))
+opt
+```
+
+Here you’re effectively advising the lab: “If you use a probability cut-off of X, you’ll catch Y% of true cases (sensitivity) but risk Z% false positives (1-specificity).
+
+*Step 11: Calibration & model fit*
+
+We also check whether predicted probabilities are well calibrated.
+
+```{r}
+hl <- ResourceSelection::hoslem.test(as.numeric(train$diabetes) - 1,
+                                     fitted(fit), g = 10)
+hl
+
+brier <- mean((as.numeric(test$diabetes) - 1 - test$pred_prob)^2)
+brier
+```
+
+
+*Step 12: Presenting results*
+
+Report table for the lab:
+```{r}
+or_tab %>%
+  mutate(p.value = format.pval(p.value, digits = 3)) %>%
+  arrange(desc(OR))
+```
+
+
+In our logistic regression analysis, glucose and BMI emerged as strong independent predictors of diabetes. Per 10 mg/dL increase in glucose, the odds of diabetes rose by ~X.X (95% CI A–B). Per 5 kg/m² increase in BMI, the odds increased by ~Y.Y (95% CI C–D). Age and insulin showed weaker effects. The model achieved an AUC of ~Z.Z, indicating good discrimination, with ~S% sensitivity and ~T% specificity at the optimal threshold.
+
+*Step 13: Sensitivity checks* (probably skip)
+
+Try variations to stress-test the model:
+
+Log-transform insulin.
+
+Add a spline for age.
+
+Check glucose × BMI interaction.
+
+*Step 14: Limitations*
+
+Be honest with the lab:
+
+This dataset comes from a specific population; results may not generalise.
+
+Only four predictors — real surveys should include diet, family history, etc.
+
+Measurements (glucose, insulin) are single time points — subject to error.
+
+*Step 15: Deliverables checklist*
+
+As the lab’s contract statistician, here’s what you’ll deliver:
+
+Cleaned data script.
+
+Logistic regression model with ORs & CIs.
+
+ROC curve and AUC.
+
+Short narrative report with interpretation and limitations.
+
+Fully reproducible R Markdown/Quarto file.
 
 # Session Info
 
