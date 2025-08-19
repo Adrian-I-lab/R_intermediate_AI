@@ -155,7 +155,7 @@ git init
 
 ### Git Step 3: set up github remote
 
-make github repo if you haven't already
+make github repo if you haven't already (Should be empty no read me and no .gitignore)
 
 in repo page click on green code button, in local under clone click ssh and copy the link into the command below
 
@@ -235,6 +235,7 @@ Now lets add and commit:
 ```{bash}
 git add . # The dot means add everything in folder, if you want to add a specific file you can put file name here
 ```
+
 remember now we have added it to the git file buit its not saved (open word document not saved analogy). To save we need to commit and every commit, since they are all saved and viewable forever, needs to have a comment explainign what the change is. Make the comment useful to someone who doesnt knwo what you are doing, or your future self whom forgot what this script was even for. Commenting is best done when you describe the change and effect and even sometimes reason why you did that. 
 
 e.g. line 27 changed is a bad comment while updated color scheme and font size on figure 1 bar plot is better comment
@@ -248,7 +249,7 @@ git commit -m "Initial commit. Made R project, git, and github"
 Now this all saved on our git file and some people do stop here but its highly NOT recommended. Its much safer to push to github and keep a backup of everything there. I have accidently deleted an entire project folder on the HPC including the .git file which I hadnt pushed to github in months and essentially lost almsot half a year worth of scripts. Ever since then I push my git file at the end of every work day.
 
 ```{bash}
-git push origin master
+git push -u origin master
 ```
 
 
