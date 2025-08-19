@@ -99,7 +99,7 @@ git pull origin main: get all the files from your github from the main branch
 
 And those are the only fucntions you actually need to remember. However, as mentioned it will take a few extra steps to get things set up and linked from R to github.
 
-### Git Step 0:
+### Git Step 0: Make sure accounts are set up and software installed
 
 You should already have a github account made and a repository made with the same name as your project.
 https://swcarpentry.github.io/git-novice/index.html#creating-a-github-account
@@ -111,31 +111,7 @@ https://carpentries.github.io/workshop-template/install_instructions/#git
   https://gitforwindows.org/
 
 
-### Git Step 1:
-
-```{r}
-# Packages
-renv::install("knitr")
-
-is_online <- function(site = "http://www.google.com/") {
-  tryCatch({
-    readLines(site, n = 1)
-    TRUE
-  }, warning = function(w) {
-    # Optionally handle warnings, e.g., by muffling them
-    invokeRestart("muffleWarning")
-  }, error = function(e) {
-    FALSE
-  })
-}
-
-# Check if online
-if (is_online()) {
-  print("R has internet access.")
-} else {
-  print("R does not have internet access.")
-}
-```
+### Git Step 1: 
 
 open terminal and cd to your project folder. It should be already there but just check:
 
@@ -177,7 +153,7 @@ make sure you are in your R project folder. Then run the following command to cr
 git init
 ```
 
-### Git step 3: set up github remote
+### Git Step 3: set up github remote
 
 make github repo if you haven't already
 
@@ -197,6 +173,7 @@ e.g. C:/Users/AdrianI/.ssh/id_ed25519
 
 
 ```{bash}
+# Interactive run in terminal
 ssh-keygen -t ed25519 -C "adrian.ilich@qimrb.edu.au"
 ```
 
@@ -208,6 +185,14 @@ cat C:/Users/AdrianI/.ssh/id_ed25519.pub
 # but change folder to your name
 ```
 once you have copied the key go into github. Go into your github settings (NOT THE REPOSITORY SETTINGS) and go to SSH and GPG keys. click add new ssh key (top right corner green button) and then simply make a name that describes where this key is to e.g. Personal laptop key or HPC_access key etc. then paste the id_ed25519.pub file contents that you copied in the box below and save. Leave key type as authentication key. Github may ask you to enter a authentication code that it emails to your email as a safety precaution.
+
+Now lets set up the link between our R project and github repository. RUn in terminal again as it also requires interaction. it will ask you are you sure you want to continue connecting, just type "yes".
+
+```{bash}
+# Interactive run in terminal
+ssh -T git@github.com
+```
+
 
 ### Git Step 6: Push local changes to github
 
@@ -248,9 +233,23 @@ git status
 Now lets add and commit:
 
 ```{bash}
-git add . # The dot means add everything, if you want to add a specific file you can put file name here
+git add . # The dot means add everything in folder, if you want to add a specific file you can put file name here
+```
+remember now we have added it to the git file buit its not saved (open word document not saved analogy). To save we need to commit and every commit, since they are all saved and viewable forever, needs to have a comment explainign what the change is. Make the comment useful to someone who doesnt knwo what you are doing, or your future self whom forgot what this script was even for. Commenting is best done when you describe the change and effect and even sometimes reason why you did that. 
+
+e.g. line 27 changed is a bad comment while updated color scheme and font size on figure 1 bar plot is better comment
+
+lets commit our changes. Initial commit comments usually arent that important since we havent done too much yet
+
+```{bash}
+git commit -m "Initial commit. Made R project, git, and github"
 ```
 
+Now this all saved on our git file and some people do stop here but its highly NOT recommended. Its much safer to push to github and keep a backup of everything there. I have accidently deleted an entire project folder on the HPC including the .git file which I hadnt pushed to github in months and essentially lost almsot half a year worth of scripts. Ever since then I push my git file at the end of every work day.
+
+```{bash}
+git push origin master
+```
 
 
 
