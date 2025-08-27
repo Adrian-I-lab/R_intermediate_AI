@@ -1,0 +1,144 @@
+---
+title: "Intermediate R: Reproducible Analysis & Pipelines"
+author: "Adrian Ilich"
+date: "2025-08-27"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    transition: fade
+    toc: false
+    overview: true
+    incremental: false
+---
+
+# Welcome
+- Intermediate skills for reproducible analysis
+- Hands-on, project-first mindset
+- Deliver tidy, documented, re-runnable work
+
+# Audience & Outcomes
+- For graduates of Intro to R
+- Build a clean project, manage packages, write pipelines
+- Produce a shareable report
+
+# Day 1 Modules
+- Projects & folders
+- Quarto/R Markdown basics
+- Packages & reproducibility with renv
+- Tidy pipelines: dplyr, functions, map()
+
+# Day 2 (Optional)
+- GitHub setup in RStudio
+- Mini end-to-end project
+- Share with a client
+
+# Why Projects?
+- Keep paths stable, assets self-contained
+- Separate raw data, outputs, and checkpoints
+- Document decisions in a report
+
+# Minimal Layout
+- Base has scripts + docs only
+- Subfolders: data/, outputs/, r_objects/
+- Use .gitignore to avoid clutter
+
+# Quarto vs Rmd vs Scripts
+- Scripts: quick prototyping and functions
+- Rmd/Quarto: narrative + code + output
+- Quarto scales to slides, sites, books
+
+# Reports: What Matters
+- Clear title + metadata
+- Sensible defaults (TOC, numbering)
+- Render to HTML/PDF/Word
+
+# Packages: Why Versions Matter
+- Updates can break code
+- Exact versions enable reruns
+- Report your session info
+
+# Package Ecosystem
+- CRAN: stable releases
+- Bioconductor: bioinformatics, tied to R
+- GitHub: dev/cutting-edge
+
+# renv Basics
+- Project-local library
+- Lockfile records exact versions
+- Snapshot now, restore later
+
+# renv Good Habits
+- Initialise early
+- Install inside the project
+- Snapshot after meaningful changes
+
+# Tidy Data Principles
+- One variable per column
+- One observation per row
+- One value per cell
+
+# Core dplyr Verbs
+- select(): columns
+- filter(): rows
+- mutate(): new variables
+
+# Summaries
+- group_by() + summarise()
+- count() for quick tallies
+- Arrange for clear ordering
+
+# Reshaping
+- pivot_longer(): wide → long
+- pivot_wider(): long → wide
+- Prefer long for modelling and plots
+
+# Helpful Bits
+- rename(), arrange(), distinct()
+- fill() to carry values up/down
+- n() for group sizes
+
+# Functions
+- Bundle repeated steps
+- Use clear arguments and returns
+- Return lists for multi-outputs
+
+# lapply vs purrr::map
+- lapply(): base, returns lists
+- purrr::map(): typed outputs + helpers
+- map_dfr() to row-bind results
+
+# Modular Pipelines
+- Split into small scripts
+- Save checkpoints with RDS
+- Restart from the last good step
+
+# Version Control (Day 2)
+- Git tracks changes over time
+- GitHub = backup + collaboration
+- Commit the recipe, not the meal
+
+# Assignment Overview
+- Choose Bioinformatics or Statistics
+- Build an end-to-end reproducible project
+- Deliver a clean report + repo
+
+# Bioinformatics Option
+- PBMC scRNA-seq (≈2,700 cells)
+- QC, clustering, marker annotation
+- Report cell-type proportions
+
+# Statistics Option
+- Diabetes risk (logistic regression)
+- ORs, CIs, ROC/AUC, calibration
+- Clear interpretation + limits
+
+# Key Reminders
+- Start with a Project + renv
+- Keep data raw; transform in scripts
+- Write small, testable functions
+
+# Closing
+- Reproducibility is a habit
+- Small, consistent steps win
+- You’ve got this—build something solid

@@ -25,7 +25,7 @@ Good commit messages describe the **effect or purpose** of a change, not just th
 - Good: `"Figure 1.1 now displays frequency histogram overlaid on bar plot"`  
 - Even better: `"Updated Figure 1.1 colour scheme and axis labels to match grant requirements"`  
 
----
+
 
 ## Git Step 0: Accounts & Software
 
@@ -37,7 +37,7 @@ Good commit messages describe the **effect or purpose** of a change, not just th
 
    - Windows shortcut: <https://gitforwindows.org/>  
 
----
+
 
 ## Git Step 1: Configure Git
 
@@ -65,7 +65,7 @@ git config --list --global
 
 These settings apply for all Git projects on your computer.
 
----
+
 
 ## Git Step 2: Initialise Git in Your Project
 
@@ -101,7 +101,7 @@ renv.lock
 As a rule, keep your GitHub repository private until you are ready to publish or release your work. Remember that once a repository is made public, all committed history becomes accessible to anyone.
 
 If you are working on a commercial product or a project that will eventually be shared publicly, consult with the Business Development or legal team (e.g. at QIMR) to confirm what should and shouldn’t be shared. You can also apply specific GitHub licences to protect your intellectual property and clarify usage rights when you are ready to make your code public.
----
+
 
 ## Git Step 3: Connect to GitHub Remote
 
@@ -114,7 +114,7 @@ git remote add origin git@github.com:username/repository.git
 git remote -v   # Check that fetch and push URLs are correct
 ```
 
----
+
 
 ## Git Step 4: Create an SSH Key
 
@@ -132,7 +132,7 @@ Press Enter three times to accept defaults (no password). This creates a key in 
 C:/Users/YourName/.ssh/id_ed25519
 ```
 
----
+
 
 ## Git Step 5: Add Your SSH Key to GitHub
 
@@ -152,7 +152,7 @@ ssh -T git@github.com
 
 Type “yes” when prompted.
 
----
+
 
 ## Git Step 6: First Commit & Push
 
@@ -191,8 +191,8 @@ git pull origin main
 
 
 
----
+
 
 > **Tip:** Always update your `.gitignore` so raw data, outputs, or large files aren’t accidentally committed.
 
----
+
