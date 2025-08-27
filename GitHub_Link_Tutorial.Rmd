@@ -1,0 +1,198 @@
+---
+title: "Linking Your R Project to GitHub"
+author: "Adrian Ilich"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Link Your GitHub Account
+
+At first, linking your project to GitHub may seem a little overwhelming, but once the initial setup is complete, you’ll find that you only need a small set of commands for day-to-day use.
+
+## The 5 Git Commands You’ll Use Most
+
+- **`git status`** — Check which files have changed or are not yet added to version control.  
+- **`git add .`** — Stage all files in your project folder to be tracked (excluding anything listed in `.gitignore`).  
+- **`git commit -m "message"`** — Save the staged changes with a message describing *what* you changed and *why*.  
+- **`git push origin main`** — Upload your committed changes to your GitHub repository for safe backup and sharing.  
+- **`git pull origin main`** — Download the latest version of the project from GitHub to your computer.  
+
+Think of it like editing a Word document: `git add` stages your edits, `git commit` is pressing “Save,” and `git push` is copying that saved version to the cloud (GitHub).
+
+Good commit messages describe the **effect or purpose** of a change, not just the line edited:
+
+- Bad: `"Changed ggplot on line 33 to have geom_bar"`  
+- Good: `"Figure 1.1 now displays frequency histogram overlaid on bar plot"`  
+- Even better: `"Updated Figure 1.1 colour scheme and axis labels to match grant requirements"`  
+
+---
+
+## Git Step 0: Accounts & Software
+
+1. Create a GitHub account if you don’t already have one:  
+   <https://swcarpentry.github.io/git-novice/index.html#creating-a-github-account>  
+
+2. Install Git on your computer:  
+   <https://carpentries.github.io/workshop-template/install_instructions/#git>  
+
+   - Windows shortcut: <https://gitforwindows.org/>  
+
+---
+
+## Git Step 1: Configure Git
+
+Open a terminal, navigate to your project folder (`getwd()` in R will confirm where you are), and configure Git:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+# Windows:
+git config --global core.autocrlf true
+
+# macOS/Linux:
+git config --global core.autocrlf input
+
+# Set nano as the default editor (optional)
+git config --global core.editor "nano -w"
+
+# Set the default branch name to main
+git config --global init.defaultBranch main
+
+# Check settings
+git config --list --global
+```
+
+These settings apply for all Git projects on your computer.
+
+---
+
+## Git Step 2: Initialise Git in Your Project
+
+```bash
+git init        # Create a .git folder
+git branch -M main
+```
+
+We also need to create a .gitignore file to simplify version control with Git/GitHub. The purpose of this file is to exclude certain files and folders from being tracked. Only scripts and documentation should be committed — never raw data, images, or large binary files. Each time you add files to Git, the .gitignore is checked, and anything listed there will be skipped automatically.
+
+This practice is critical for several reasons:
+
+Confidentiality: Prevents accidental exposure of sensitive or client data.
+
+Trust & credibility: Avoids sharing messy or intermediate files that could reduce confidence in your work.
+
+Publication & commercialisation: Making raw data public too early may reduce journal interest, complicate intellectual property claims, or breach agreements with collaborators.
+
+**.gitignore (starter)**
+```text
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+renv/
+renv.lock
+# Data & heavy outputs
+/data/
+/outputs/
+/r_objects/
+```
+
+As a rule, keep your GitHub repository private until you are ready to publish or release your work. Remember that once a repository is made public, all committed history becomes accessible to anyone.
+
+If you are working on a commercial product or a project that will eventually be shared publicly, consult with the Business Development or legal team (e.g. at QIMR) to confirm what should and shouldn’t be shared. You can also apply specific GitHub licences to protect your intellectual property and clarify usage rights when you are ready to make your code public.
+---
+
+## Git Step 3: Connect to GitHub Remote
+
+1. Create a new, empty repository on GitHub (no README, no `.gitignore`).  
+2. On the repo page, click the green “Code” button → copy the SSH URL.  
+3. Back in your terminal, link the local project to the GitHub repo:
+
+```bash
+git remote add origin git@github.com:username/repository.git
+git remote -v   # Check that fetch and push URLs are correct
+```
+
+---
+
+## Git Step 4: Create an SSH Key
+
+SSH keys let your computer connect securely to GitHub without repeatedly asking for a password.
+
+Run the following in your terminal (interactive):
+
+```bash
+ssh-keygen -t ed25519 -C "your.email@example.com"
+```
+
+Press Enter three times to accept defaults (no password). This creates a key in your hidden `.ssh/` folder, e.g.:
+
+```
+C:/Users/YourName/.ssh/id_ed25519
+```
+
+---
+
+## Git Step 5: Add Your SSH Key to GitHub
+
+1. Display the public key:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+2. Copy the output, then go to GitHub → **Settings** → **SSH and GPG keys** → *Add new SSH key*.  
+3. Give it a descriptive name (e.g., “Laptop” or “HPC access”), paste the key, and save.  
+4. Test the connection:
+
+```bash
+ssh -T git@github.com
+```
+
+Type “yes” when prompted.
+
+---
+
+## Git Step 6: First Commit & Push
+
+1. Check what files are staged:  
+```bash
+git status
+```
+
+2. Stage files:  
+```bash
+git add .
+```
+
+3. Commit with a message:  
+```bash
+git commit -m "Initial commit: created R project and setup renv"
+```
+
+4. Push to GitHub:  
+```bash
+git push -u origin main
+```
+
+Now your project is safely stored in GitHub, complete with history.
+
+
+Daily Git workflow:
+```bash
+git status
+git add .
+git commit -m "message"
+git push origin main
+# next day or if on new computer
+git pull origin main
+```
+
+
+
+---
+
+> **Tip:** Always update your `.gitignore` so raw data, outputs, or large files aren’t accidentally committed.
+
+---

@@ -1,0 +1,1506 @@
+---
+title: "Intermediate R: Reproducible Analysis & Pipelines"
+author: "Adrian Ilich"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+# Overview
+
+**Audience:** Learners who have completed an Intro to R workshop.
+
+**Goal:** Build a fully reproducible, documented, and version-controlled mini-analysis using Projects, Quarto/R Markdown, package/version management, and tidy pipelines.
+
+**Format:** 1 compulsory day + optional Day 2 lab.
+
+**Outcomes**
+- Create a robust R Project structure with clear folders and `.gitignore`.
+- Use Quarto/R Markdown with sensible YAML and chunk options.
+- Manage packages and reproducibility with `renv` (and understand Bioconductor/GitHub remotes).
+- Build tidy, modular pipelines with functions, `lapply`/`purrr::map()`, and checkpoints via `saveRDS()/readRDS()`.
+
+---
+
+# Schedule (Day 1 — compulsory)
+
+| Time | Module | Learning objectives |
+|---|---|---|
+| 09:30–10:10 | 1. Projects & Folders | Create an R Project; set up folders, `.gitignore`; discuss data governance |
+| 10:10–11:00 | 2. Quarto & R Markdown | Compare Quarto vs Rmd vs scripts; set YAML; code-chunk options; rendering |
+| 11:00–11:20 | **Morning tea** | — |
+| 11:20–12:30 | 3. Package management & reproducibility | Package systems (CRAN/Bioc/GitHub); `renv`; reporting `sessionInfo()` |
+| 12:30–13:10 | **Lunch** | — |
+| 13:10–14:30 | 4. Pipelines | (4a) Tidy data & dplyr, (4b) writing functions & `lapply`/`purrr`, (4c) modular code & checkpoints |
+| 14:30–15:00 | Wrap-up | Assignment brief + Q&A |
+
+**Optional Day 2 (09:30–12:30):** GitHub setup sprint + mini project build (end-to-end).
+
+---
+
+# Data & Setup
+
+**Prerequisites**
+- R (≥ 4.3), RStudio (or Positron).
+- A GitHub account (for optional section).
+
+**Packages used today**
+`tidyverse`, `broom`, `pROC`, `caret`, `car`, `ResourceSelection`, `remotes`, `renv` (plus `Seurat` in bioinformatics example).
+
+---
+
+# 1. R Project & Folder Setup
+
+## 1.1 Why Projects?
+
+A well-structured R Project keeps all your analysis assets self-contained, organised, and reproducible. Think of it as your experiment container — it holds your code, documentation, and only the derived outputs you choose to track. By starting every new project this way, you avoid broken file paths, cluttered directories, and scripts that only work on one machine.
+
+At the very beginning of any project, there are two essential steps:
+
+1. Create a new R Project (probably with renv)
+Using renv ensures all packages and their versions are locked to the project. This protects you from common reproducibility issues caused by package updates or new R releases. In fast-moving fields like bioinformatics and statistics, it is almost guaranteed that code written today will break in a year if package versions aren’t controlled. With renv, you can reliably rerun your analysis at any time.
+
+2. Set up version control with Git/GitHub (optional today, detailed on Day 2)
+Git allows you to track every change in your scripts, roll back to earlier versions when mistakes happen, and keep your work safe with offsite backups on GitHub. It acts like a digital lab notebook for your code — documenting what you did, when you did it, and why. For example, if you accidentally delete or overwrite a project, you can recover an earlier version from GitHub.
+
+Today, we’ll mainly focus on Projects, folder structure, and renv. We’ll circle back to Git and GitHub in the optional Day 2 session, where you’ll practice linking a project to GitHub, committing and pushing changes, and pulling work onto a different computer.
+
+
+## 1.2 Minimal layout
+
+To keep your work tidy and reproducible, it’s best to start with a clear folder structure. The project’s base directory should contain only your main scripts, while separate subfolders hold specific types of files: one for raw data or inputs, another for outputs and results, and a dedicated folder for saved R objects (using saveRDS()/readRDS()). Saving objects this way allows you to pause and resume your pipeline at defined checkpoints without relying on the global environment image, which can create inconsistencies and undermine reproducibility. Finally, create an R Markdown (or Quarto) file to document and run your analysis in a structured, report-ready format.
+
+```text
+myproject/
+├─ myproject.Rproj
+├─ R/                 # your functions (sourced with source())
+├─ scripts/           # one-off scripts or modules
+├─ reports/           # Quarto/Rmd outputs (HTML/PDF)
+├─ data/              # raw data (never commit publically)
+├─ outputs/           # figures, tables, export files
+├─ r_objects/         # checkpoints via saveRDS()
+├─ renv/              # managed by renv
+└─ renv.lock          # pin package versions       
+```
+
+Checklist before moving on:
+
+ R Project created with an renv/ folder
+ Folder structure set up and tidy
+
+---
+
+# 2. Quarto & R Markdown
+Now that your project is set up, it’s time to begin writing your code and documenting your analysis. Instead of relying only on plain .R scripts, we’ll use R Markdown (Rmd) or Quarto (qmd) files. These allow you to combine code, text, and output (such as plots and tables) in one reproducible document.
+
+What are R Markdown and Quarto?
+
+R scripts (.R)
+Contain only code. Great for prototyping or writing reusable functions, but they don’t provide context, narrative, or easy sharing formats.
+
+R Markdown (.Rmd)
+A file format that mixes plain text (written in Markdown) with embedded R code chunks. When rendered (or “knit”), it produces polished reports in formats such as HTML, PDF, or Word.
+
+Quarto (.qmd)
+Quarto is the next generation of R Markdown, designed to be more powerful, flexible, and language-agnostic. While R Markdown focuses mainly on R, Quarto supports R, Python, Julia, and Observable JavaScript, making it ideal for multi-language workflows. It also integrates more tightly with reproducibility practices (like projects and version control).
+
+Think of it this way:
+
+R scripts → scratchpad for code.
+
+R Markdown → reproducible analysis reports.
+
+Quarto → full publishing framework (supports books, websites, dashboards, and multi-language projects).
+
+Note: In this course, we’ll mostly use R Markdown (since it’s still widely adopted and easier for newcomers), but you should know Quarto is where the R Markdown ecosystem is heading.
+
+
+## 2.1 Quarto vs Rmd vs scripts
+- **Quarto/Rmd**: narrative + code + figures; reproducible reporting.
+- **R script**: library-like code, quick experiments, or functions to source with `source()`.
+
+## 2.2 Structure of an R Markdown/Quarto File
+
+Every .Rmd or .qmd document has three main parts:
+
+YAML header — A block of settings at the top of the document (between ---). Controls metadata (title, author, date) and output format.
+
+Narrative text — Written in plain Markdown. Supports headings, lists, bold/italics, links, etc.
+
+Code chunks — Embedded pieces of R (or Python, etc.) code, surrounded by triple backticks. These are executed when you render the document, and the results appear inline.
+
+## 2.3 YAML snippets
+**HTML report**
+```yaml
+---
+title: "Draft Data Report"
+author: "Adrian Ilich"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    number-sections: true
+    css: style.css
+lang: en-AU
+---
+```
+
+**PDF report (Rmd)**
+```yaml
+---
+title: "Draft Data Report"
+author: "Adrian Ilich"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+bibliography: refs.bib
+csl: nature.csl
+lang: en-AU
+---
+```
+
+## 2.4 YAML: Common Options
+You can customise a huge range of behaviours in the YAML. Here are the most important categories:
+
+Document metadata
+
+title, author, date
+
+subtitle — secondary heading under the title
+
+abstract — short summary at the start (good for academic reports)
+
+keywords — useful for indexing/search
+
+lang — e.g. en-AU for Australian English
+
+bibliography — link to a .bib reference file
+
+csl — citation style (APA, Nature, etc.)
+
+link-citations: true — hyperlinks in-text citations to the reference list
+
+Output customisation
+
+html_document or pdf_document can have nested settings:
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: journal
+    highlight: tango
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+
+
+Code and chunk options
+
+echo — show/hide code
+
+eval — run or skip code
+
+warning / message — show or suppress messages
+
+error — continue rendering even if errors occur
+
+code_download — provide a download link for the .R file
+
+Figures and tables
+
+fig_width / fig_height — default plot sizes
+
+fig_caption: true — enable captions
+
+fig_align — left, centre, right
+
+df_print: kable — control table printing style
+
+Navigation & structure
+
+toc: true — add a table of contents
+
+toc_depth — depth of headings to include
+
+number_sections: true — numbered headings
+
+anchor_sections: true — create clickable links for each section
+
+Interactivity (HTML only)
+
+code_folding: show/hide/none
+
+toc_float: true — floating navigation
+
+self_contained: true/false — embed or link assets
+
+mathjax — render LaTeX-style equations
+
+Advanced
+
+runtime: shiny — make documents interactive
+
+params — parameterised reports (ideal for pipelines or re-running analysis with new inputs)
+
+includes — add custom headers/footers
+
+keep_tex — keep LaTeX intermediate file for debugging
+
+citation_package: natbib/biblatex — for PDF output references
+
+### Example
+
+```{r setup, echo=TRUE, message=FALSE}
+# Load libraries
+library(tidyverse)
+
+# Quick example dataset
+head(mtcars)
+```
+
+
+## 2.5 Why Use R Markdown/Quarto?
+
+Reproducibility — code + narrative + output in one file.
+
+Transparency — every result is tied to the code that produced it.
+
+Flexibility — output to multiple formats (HTML, PDF, Word, slides).
+
+Professionalism — polished reports for collaborators, clients, or publications.
+
+Scalability — Quarto extends this to websites, dashboards, and books.
+
+### Activity: Create a new R Markdown or Quarto file in your project. 
+
+Add:
+
+A title and author in YAML.
+
+A short text introduction.
+
+One code chunk that loads mtcars and makes a simple ggplot2 scatter plot.
+
+Render to HTML.
+
+---
+
+# 3. Package Management & Reproducibility
+## Why package versions matter
+
+One of the most common sources of frustration in R projects is when code that worked perfectly last month suddenly breaks. This usually happens because **packages or R itself have been updated**. Package version control is the practice of keeping track of exactly which version of R and which version of each package you used in an analysis. Doing this properly is essential for **reproducibility**.
+
+---
+
+## How the R package system works
+
+### Repositories
+
+- **CRAN (Comprehensive R Archive Network)**  
+  The main “app store” for R. When you run `install.packages("dplyr")`, R downloads the latest version from CRAN.
+
+- **Bioconductor**  
+  A repository focused on bioinformatics. Install with `BiocManager::install("DESeq2")`. Bioconductor releases are tied to specific R versions. Mixing packages across different Bioconductor releases can cause compatibility issues.
+
+- **GitHub (or other remotes)**  
+  Developers often publish cutting‑edge or development versions on GitHub. Install with `remotes::install_github("owner/repo")`.
+
+### Libraries (where packages live)
+
+When you install a package, R places it into a **library path**. By default, this is the first element of `.libPaths()`.
+
+```{r}
+.libPaths()
+```
+
+You can install to a custom path, but this gets messy quickly:
+
+```{r eval=FALSE}
+install.packages("dplyr", lib = "C:/R/Libraries/Test")
+```
+
+Tools like **renv** simplify this by creating a project‑specific library automatically.
+
+---
+
+## Checking your environment
+
+R provides built‑in tools to see what versions you’re working with:
+
+```{r}
+# Version of R
+getRversion()
+
+# More detailed R build info
+version
+
+# R + loaded packages (versions)
+sessionInfo()
+```
+
+Include `sessionInfo()` in your report for collaborators, journals, and for your future self.
+
+---
+
+## Installing specific package versions (without renv)
+
+By default, R overwrites packages with the newest version. If you need a specific version:
+
+```{r eval=FALSE}
+install.packages("dplyr")                 # latest
+library(remotes)
+install_version("dplyr", version = "1.0.7")  # specific
+```
+
+This approach is tedious across many packages—**renv** automates it per project.
+
+## Summary package systems & versions
+- **CRAN**: stable releases.
+- **Bioconductor**: release cycles matched to R versions.
+- **GitHub remotes**: via `remotes::install_github()`.
+
+**Without renv**
+```r
+install.packages("dplyr")
+remotes::install_version("dplyr", version = "1.0.7")
+View(installed.packages())
+```
+
+---
+
+## Project‑specific libraries with renv
+
+The `renv` package creates a **self‑contained environment** for each project. Packages are stored locally (inside the project folder), and a lockfile records exact versions.
+
+### Basic workflow
+
+```{r eval=FALSE}
+# 1) Start renv in your project
+renv::init()
+
+# 2) Install packages INSIDE the project library
+install.packages("tidyverse")
+# or for Bioconductor
+# BiocManager::install("DESeq2")
+
+# 3) Record exact versions in renv.lock
+renv::snapshot()
+```
+
+To recreate the environment elsewhere (or later), use:
+
+```{r eval=FALSE}
+renv::restore()
+```
+
+### Updating versions with renv
+
+```{r eval=FALSE}
+# Install a specific version
+renv::install("dplyr@1.0.7")
+
+# Update the lockfile
+renv::snapshot()
+```
+
+> ⚠️ **Caution:** Changing versions mid‑project can break code. Lock early; update only when necessary.
+
+### Deactivating or removing renv
+
+```{r eval=FALSE}
+renv::deactivate()             # stop auto‑loading renv
+renv::activate()               # turn it back on later
+renv::deactivate(clean = TRUE) # fully remove; start over with renv::init()
+```
+
+### `renv` summary
+
+```r
+renv::init()
+renv::install("tidyverse")
+renv::snapshot()
+renv::restore()
+getRversion()
+sessionInfo()
+```
+
+---
+
+## Beyond R: containers
+
+`renv` is great for R dependencies, but not for multi‑language projects (e.g., R + Python via reticulate, shell tools). For full reproducibility across languages and system libraries, look into **containers** (Docker, Singularity). Think of containers as “renv for everything on the machine.”
+
+---
+
+## Quick reference
+
+- **Check versions:** `sessionInfo()`  
+- **Install older version:** `remotes::install_version("pkg", version = "X.Y.Z")`  
+- **Start renv:** `renv::init()`  
+- **Record environment:** `renv::snapshot()`  
+- **Recreate environment:** `renv::restore()`
+
+---
+
+## Activity
+
+1. Create a new R Project and run `renv::init()`.
+2. Install `dplyr` and `ggplot2`.
+3. Run `renv::snapshot()` and open the `renv.lock` file to inspect versions.
+4. Delete your local project library folder and then run `renv::restore()` to rebuild it exactly.
+
+---
+
+# 4. Pipeline Building
+
+## 4a. Tidy data & dplyr verbs
+### Introduction: Tidy data principles
+
+**Tidy data** is a consistent way to arrange datasets so that analyses and visualisations are straightforward and reproducible. In a tidy dataset:
+
+1. **Each variable** has its own **column**.  
+2. **Each observation** (row, unit, or case) has its own **row**.  
+3. **Each value** has its own **cell**.  
+
+When data are tidy, we can apply a small set of well‑named functions to filter rows, select columns, create variables, summarise groups, and reshape between “wide” and “long” forms. The **tidyverse** provides a grammar of data manipulation (via `dplyr`, `tidyr`, etc.) that is expressive, readable, and composable.
+
+> **Tip:** Keep an untouched copy of the raw data (read‑only). Perform all transformations on a *working* copy so you can always recover the original.
+
+---
+
+### Setup
+
+```{r}
+library(tidyverse)
+data("starwars")  # built-in dataset: intentionally a little messy
+# Peek
+glimpse(starwars)
+```
+
+---
+
+### Core verbs: select(), filter(), mutate()
+
+These are the everyday tools for shaping your data frame.
+
+### select(): choose columns (variables)
+
+Use `select()` to keep, drop, or reorder columns. You can use names, tidyselect helpers (like `starts_with()`, `ends_with()`), or ranges.
+
+```{r}
+# Keep only a few key variables
+starwars %>% 
+  select(name, height, mass) %>% 
+  head()
+```
+
+### filter(): keep rows (observations) matching conditions
+
+`filter()` subsets rows by logical expressions. Combine conditions with `,` (AND) or `|` (OR).
+
+```{r}
+# Humans who are recorded as masculine
+starwars %>% 
+  filter(species == "Human", gender == "masculine") %>% 
+  select(name, homeworld, mass) %>% 
+  head()
+```
+
+### mutate(): create or transform variables
+
+`mutate()` adds new columns or modifies existing ones. You can reference columns created earlier in the same call.
+
+```{r}
+# Body-mass index from height (cm) and mass (kg)
+starwars %>% 
+  mutate(bmi = mass / (height/100)^2) %>% 
+  select(name, mass, height, bmi) %>% 
+  head()
+```
+
+> **How these functions work:** Each verb takes a data frame as its first argument and returns a *new* data frame. Because the output is still a data frame, you can chain verbs together with the pipe (`|>` or `%>%`).
+
+---
+
+### Summarising: group_by() + summarise(), and count()
+
+To aggregate data, first group with `group_by()`, then compute summaries with `summarise()`.
+
+```{r}
+# Mean BMI by gender, keeping only complete BMI inputs
+starwars %>%
+  filter(!is.na(height), !is.na(mass)) %>%
+  mutate(bmi = mass / (height/100)^2) %>%
+  group_by(gender) %>%
+  summarise(
+    mean_bmi = mean(bmi, na.rm = TRUE),
+    n        = n()
+  ) %>% 
+  arrange(desc(mean_bmi))
+```
+
+`count()` is a shorthand for `group_by(x) |> summarise(n = n())` and supports weighting with `wt =`.
+
+```{r}
+# Frequency of species
+starwars %>% 
+  count(species, sort = TRUE) %>% 
+  head(10)
+```
+
+> **How summarise works:** `group_by()` tags the data with grouping variables but doesn’t change rows. `summarise()` collapses each group to one row using summary functions (mean, median, n, sd, etc.). Ungroup afterward with `ungroup()` if you will perform non‑grouped operations next.
+
+---
+
+### Reshaping (tidyr): pivot_longer() and pivot_wider()
+
+Reshaping converts between **wide** (many columns for the same variable) and **long** (one column of values + a key column). Many modelling and plotting functions prefer long format.
+
+```{r}
+# Dummy "glucose over days" example for reshaping
+df <- tibble(
+  id = 1:2, 
+  glucose_day1 = c(85, 90), 
+  glucose_day2 = c(100, 110)
+)
+
+# Wide -> Long
+long_df <- df %>% 
+  pivot_longer(cols = starts_with("glucose"),
+               names_to  = "day",
+               values_to = "glucose")
+
+long_df
+```
+
+You can also go **Long -> Wide** when needed (for specific modelling functions or presentation).
+
+```{r}
+# Long -> Wide (illustration)
+wide_again <- long_df %>%
+  pivot_wider(names_from = day, values_from = glucose)
+
+wide_again
+```
+
+> **How pivoting works:** `pivot_longer()` gathers multiple columns into key–value pairs (name of the variable and its value). `pivot_wider()` spreads key–value pairs back into multiple columns. Good naming helps: a `names_to` column acts like a factor indicating which measurement each row represents.
+
+---
+
+### Useful helpers: rename(), arrange(), distinct(), select helpers
+
+These tidy helpers improve readability and control.
+
+```{r}
+# Rename columns clearly (new_name = old_name)
+starwars %>%
+  rename(
+    person = name,
+    yob    = birth_year
+  ) %>%
+  select(person, yob, homeworld) %>%
+  head()
+```
+
+```{r}
+# Sort rows
+starwars %>%
+  select(name, height, mass) %>%
+  arrange(height) %>%           # ascending
+  head()
+```
+
+```{r}
+# Sort by mass descending
+starwars %>%
+  select(name, height, mass) %>%
+  arrange(desc(mass)) %>%
+  head()
+```
+
+```{r}
+# Keep unique combinations of variables
+starwars %>% 
+  select(homeworld, species) %>% 
+  distinct() %>% 
+  head()
+```
+
+> **How arrange & rename work:** `arrange()` orders rows by one or more columns (use `desc()` for descending). `rename()` improves semantics of your variables; clear names make downstream code self‑documenting.
+
+---
+
+### Missing data, pipes, and workflow tips
+
+- Handle missing values explicitly (`is.na()`, `drop_na()`), and set `na.rm = TRUE` in summaries.  
+- Prefer pipes to build a readable, top‑to‑bottom narrative of your transformation.  
+- Keep transformations *pure*: each verb returns a new data frame without side‑effects.  
+- Save intermediate results if they represent meaningful checkpoints (e.g., `clean_df <- raw_df |> ...`).
+
+```{r}
+# Example pipeline: clean -> feature -> summarise
+clean_summary <- starwars %>%
+  filter(!is.na(height), !is.na(mass)) %>%
+  mutate(
+    bmi = mass / (height/100)^2,
+    tall = height > 180
+  ) %>%
+  group_by(species, tall) %>%
+  summarise(
+    mean_bmi = mean(bmi, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(mean_bmi))
+
+head(clean_summary)
+```
+
+### Handling missing values with fill()
+
+When working with time series or grouped data, you often encounter missing values that should be “carried forward” or “carried backward.” The fill() function fills in NAs in a column using the most recent non-missing value.
+
+#### Example dataset with missing values
+
+```{r}
+df <- tibble(
+  day = 1:6,
+  treatment = c("DrugA", NA, NA, "DrugB", NA, NA)
+)
+
+df
+```
+
+#### Fill missing values downwards (carry last non-NA forward)
+
+```{r}
+df %>% fill(treatment, .direction = "down")
+```
+
+#### Fill upwards (use next non-NA value)
+
+```{r}
+df %>% fill(treatment, .direction = "up")
+```
+
+
+How fill() works: By default it fills downward, carrying the most recent non-missing value forward until a new one appears. With .direction = "up", it carries the next available value backward. This is especially useful for panel data, logs, or experimental records where a category applies to multiple subsequent rows.
+
+###Counting rows with n()
+
+When summarising grouped data, you often need to know how many rows are in each group. The n() function (used inside summarise()) returns the number of rows per group.
+
+#### Number of characters per species
+
+```{r}
+starwars %>%
+  group_by(species) %>%
+  summarise(n_characters = n()) %>%
+  arrange(desc(n_characters)) %>%
+  head()
+```
+
+
+n() can also be used in mutate() to annotate each row with its group size:
+
+#### Add group size column
+
+```{r}
+starwars %>%
+  group_by(homeworld) %>%
+  mutate(n_homeworld = n()) %>%
+  select(name, homeworld, n_homeworld) %>%
+  head()
+```
+
+
+How n() works: Within a grouped data frame, n() counts the number of rows in the current group. It’s shorthand for “how many observations fall in this category,” making it extremely handy for reporting counts, frequencies, or sample sizes alongside summary statistics.
+
+---
+
+### Practice: Tidyverse mini‑exercises
+
+1. Create a new data frame with only `name`, `species`, `homeworld`.  
+2. Filter for Humans from Tatooine and arrange by `mass` (heaviest first).  
+3. Compute average `height` per `species` (ignore `NA`s) and order from tallest to shortest.  
+
+*Hints:* use `select()`, `filter()`, `arrange(desc())`, `group_by()`, `summarise(mean(height, na.rm = TRUE))`.
+
+---
+
+### Appendix: Common patterns and anti‑patterns
+
+- ✅ Prefer *long* format for modelling and `ggplot2`.  
+- ✅ Derive new variables with `mutate()`; keep raw columns intact.  
+- ✅ Chain small, readable steps; comment intent (why), not mechanics (what).  
+- ❌ Avoid manual copy‑paste in spreadsheets; use scripted transformations.  
+- ❌ Avoid setting global options that change results implicitly.  
+- ❌ Don’t rely on row order; sort explicitly with `arrange()` when needed.
+
+
+## 4b. Functions & lapply
+### Overview
+
+In this lesson you will:
+- Write your own functions in R.
+- Return single and multiple outputs (lists).
+- Apply a function repeatedly across many inputs using **base R `lapply()`**.
+- Do the same (and more) using **`purrr::map()`** from the tidyverse.
+- Learn when to choose `lapply()` vs `purrr` and common patterns (row‑binding results, error‑safe mapping, progress).
+
+> **Why functions?** If you ever copy–paste a block of code and tweak it per sample, a function is almost always better: it’s shorter, clearer, testable, and reduces mistakes.
+
+---
+
+### 1. Basics: writing a function
+
+A function bundles a sequence of steps and gives it a name. You specify **arguments** (inputs), do some work, and **return** a value (output).
+
+```{r basics-of-a-function, eval=FALSE}
+# Pythagorean theorem: c^2 = a^2 + b^2
+pyth_func <- function(a = 3, b = 4) {
+  a_sqrd <- a^2
+  b_sqrd <- b^2
+  c <- sqrt(a_sqrd + b_sqrd)
+  return(c)
+}
+
+# Call it (uses defaults 3 and 4)
+pyth_func()
+
+# Override defaults
+pyth_func(a = 5, b = 12)
+```
+
+**How this works**
+- The arguments `a` and `b` have defaults (`3`, `4`). Callers can override them.
+- Intermediate objects (`a_sqrd`, `b_sqrd`) exist **only inside** the function.
+- `return(c)` sends the value back to the caller. (If you omit `return()`, the last expression is returned.)
+
+---
+
+#### Multiple outputs with lists
+
+A function can only **return one object**, but that object can be a **list** containing many things.
+
+```{r multi-output, eval=FALSE}
+stats_on_vec <- function(x) {
+  x <- x[!is.na(x)]
+  out <- list(
+    n    = length(x),
+    mean = mean(x),
+    sd   = sd(x)
+  )
+  return(out)
+}
+
+res <- stats_on_vec(c(1, 2, 3, NA, 5))
+res$n; res$mean; res$sd
+```
+
+---
+
+### 2. A richer example: summarising the Billboard dataset
+
+We’ll write a function that, given the `billboard` dataset (from **tidyr**), computes:
+- number of songs,
+- artists with ≥ 3 charted songs,
+- tracks that reached #1,
+- weeks each track spent on the charts.
+
+```{r billboard-func, eval=FALSE}
+library(tidyverse)
+
+df <- billboard  # built-in in tidyr: Billboard Top 100 for 2000
+
+summarise_billboard <- function(data) {
+  # Input columns include: artist, track, date.entered, wk1, wk2, ... etc.
+  
+  # 1) number of songs (rows in this dataset)
+  num_songs <- nrow(data)
+  
+  # 2) artists with at least 3 songs
+  common_artists <- data %>%
+    count(artist, name = "n_songs") %>%
+    filter(n_songs >= 3)
+  
+  # 3) tracks that hit #1 (pivot to long, look for place == 1)
+  number_ones <- data %>%
+    pivot_longer(
+      cols = -c(artist, track, date.entered),
+      names_to = "week",
+      values_to = "place"
+    ) %>%
+    filter(place == 1) %>%
+    distinct(artist, track)
+  
+  # 4) weeks on chart per track (non-missing positions)
+  chart_weeks <- data %>%
+    pivot_longer(
+      cols = -c(artist, track, date.entered),
+      names_to = "week",
+      values_to = "place"
+    ) %>%
+    drop_na(place) %>%
+    group_by(artist, track, date.entered) %>%
+    summarise(num_weeks = n(), .groups = "drop")
+  
+  list(
+    `Number of Songs` = num_songs,
+    `Common Artists`  = common_artists,
+    `Number 1s`       = number_ones,
+    `Chart Length`    = chart_weeks
+  )
+}
+
+# Example usage
+bb <- summarise_billboard(df)
+bb$`Number of Songs`
+head(bb$`Common Artists`)
+head(bb$`Number 1s`)
+head(bb$`Chart Length`)
+```
+
+**Notes**
+- We used `nrow()` for songs (rows), not `dim(data)[2]` (columns).
+- Twice we reshaped to long with `pivot_longer()` to work with weekly ranks.
+
+---
+
+### 3. Applying a function repeatedly with base R: lapply()
+
+If you have many similar objects (e.g., samples), you often need to run the **same steps** on each. Put them in a list and use `lapply()` to loop cleanly.
+
+```{r lapply-example, eval=FALSE}
+# Pretend scRNAseq_sample_1 ... scRNAseq_sample_6 are Seurat objects
+# We'll process each with the same steps.
+
+scRNAseq_list <- list(
+  "Sample 1" = scRNAseq_sample_1,
+  "Sample 2" = scRNAseq_sample_2,
+  "Sample 3" = scRNAseq_sample_3,
+  "Sample 4" = scRNAseq_sample_4,
+  "Sample 5" = scRNAseq_sample_5,
+  "Sample 6" = scRNAseq_sample_6
+)
+
+process_sc <- function(x) {
+  x <- FindVariableFeatures(x, assay = "RNA", verbose = FALSE)
+  x <- NormalizeData(x, assay = "RNA")
+  x <- ScaleData(x, assay = "RNA",
+                 vars.to.regress = c("nFeature_RNA", "percent.mt"),
+                 verbose = FALSE)
+  x
+}
+
+scRNAseq_list <- lapply(scRNAseq_list, process_sc)
+```
+
+**How `lapply()` works**
+- `lapply(X, FUN)` calls `FUN` **once per element** of list `X` and returns a **list** of outputs in the same order.
+- Your function should take **one argument** (the current element) and return the processed object.
+
+---
+
+### 4. purrr::map(): a tidyverse alternative with extras
+
+`purrr::map()` does the same job as `lapply()` but adds a family of typed mappers and utilities that make pipelines expressive and safe.
+
+```{r purrr-basics, eval=FALSE}
+library(purrr)
+
+# Same processing with purrr::map()
+scRNAseq_list <- map(scRNAseq_list, process_sc)
+```
+
+#### Typed mappers: map_dbl(), map_int(), map_chr(), map_lgl()
+
+When you expect a specific output type, use a typed mapper to get a vector **instead of a list**.
+
+```{r purrr-typed, eval=FALSE}
+# Example: length (number of features) per sample -> returns integer vector
+n_feats <- map_int(scRNAseq_list, ~ nrow(GetAssayData(.x, assay = "RNA")))
+```
+
+#### Row-bind many data frames: map_dfr()
+
+When each iteration returns a data frame/tibble, `map_dfr()` will **row-bind** the results for you.
+
+```{r purrr-mapdfr, eval=FALSE}
+# Summarise each sample into a small tibble, then row-bind
+summ_one <- function(obj, id) {
+  tibble(
+    sample = id,
+    nCells = ncol(GetAssayData(obj, assay = "RNA")),
+    nGenes = nrow(GetAssayData(obj, assay = "RNA"))
+  )
+}
+
+summary_tbl <- imap_dfr(scRNAseq_list, summ_one)  # imap passes (value, name)
+```
+
+#### Anonymous functions & the formula shortcut
+
+You don’t have to name every small function. Use the **formula** form `~` with `.x` as the current element (and `.y` for names with `imap`).
+
+```{r purrr-anon, eval=FALSE}
+# Square each number
+map_dbl(1:5, ~ .x^2)
+```
+
+#### Error-safe mapping with safely()
+
+Long pipelines shouldn’t fail just because **one** element errors. Wrap your function with `safely()` to capture errors and continue.
+
+```{r purrr-safely, eval=FALSE}
+safe_log <- safely(log)  # returns list(result = ..., error = ...)
+out <- map(list(1, 10, "oops", 100), safe_log)
+
+# Inspect which iterations errored
+map_lgl(out, ~ !is.null(.x$error))
+```
+
+#### Progress and parallel
+
+For heavier jobs, consider pairing purrr with progress/parallel (beyond scope here). Look into `progressr`, `furrr` (purrr + future), or `future.apply`.
+
+---
+
+### 5. Choosing between lapply() and purrr
+
+- **Use `lapply()`** when you want base R, minimal dependencies, and you’re comfortable handling lists and binding yourself.
+- **Use `purrr`** when you want typed outputs (`map_dbl`/`map_chr`), convenient row‑binding (`map_dfr`), error handling (`safely`), and tight integration with dplyr/tidyr pipes.
+
+---
+
+### 6. Practice
+
+1) Write a function that standardises a numeric vector (subtract mean, divide by sd), returning a list with `mean`, `sd`, and the `z`‑scored vector.  
+2) Put three numeric vectors into a list; use `map()` (or `lapply()`) to apply your function to each.  
+3) Use `map_dfr()` to combine the `mean` and `sd` from all three into a single summary table.
+
+## 4c. Modular pipelines with checkpoints
+
+### Modular Code
+
+Modular coding refers to breaking your workflow into smaller, well-defined sections or scripts that each handle a specific part of the overall pipeline. These modules can then be sequenced together to form the complete analysis. While it may feel like extra work compared to running everything from start to finish in a single script, modular design becomes invaluable for larger projects. For example, if an error occurs in script 4, you will know exactly where the issue lies, rather than digging through a 10,000-line script trying to guess where things went wrong.
+
+Another advantage is flexibility: you can update or rearrange specific modules, or start and stop your workflow at different points. This is particularly useful when resource requirements vary. For instance, one function might need 500 GB of RAM and multiple cores, while the other ten modules in your pipeline only require 32 GB and a single core. Running modules independently allows you to request only the resources you need for each stage, freeing up space and reducing wasted computing time on the HPC.
+
+The simplest way to make an analysis pipeline modular in R is by adding checkpoints with saveRDS() and readRDS(). For example, in a single-cell RNA-seq workflow:
+
+Raw sequencing data → Script 1: Load data, perform QC → save R_object1
+
+R_object1 → Script 2: Run dimensionality reduction → save R_object2
+
+R_object2 → Script 3: Perform clustering and labelling → save R_object3
+
+R_object3 → Script 4: Conduct differential expression and KEGG enrichment → save R_object4
+
+With this setup, if you want to re-try clustering with different parameters, you can restart from Script 3 instead of rerunning the entire pipeline from raw data, saving hours (or days) of compute time. As long as you follow good practices—using renv for package version control and Git for tracking changes—your pipeline will remain reproducible and easy to maintain.
+
+In more advanced projects, pipelines can involve dozens or even hundreds of modules. In these cases, specialised pipeline managers such as Snakemake can help you define dependencies, manage resources, and automatically run only the steps that need updating. While this is outside the scope of this workshop, you can explore more here: https://snakemake.readthedocs.io/en/stable/
+
+```text
+Script 1: load + QC → saveRDS(obj1)
+Script 2: readRDS(obj1) → PCA → saveRDS(obj2)
+Script 3: readRDS(obj2) → clustering → saveRDS(obj3)
+```
+
+---
+# 5.0 Using git and github in rstudio
+## Why Version Control (Git) and GitHub Matter
+
+Modern data analysis is collaborative, iterative, and long‑lived. Files evolve, experiments branch, and—inevitably—mistakes happen. **Version control** (with Git) and **remote hosting** (with GitHub) give you:
+
+- **History & safety:** Every saved checkpoint (a *commit*) is recoverable. You can roll back to any earlier version.
+- **Collaboration:** Colleagues can propose changes via **pull requests**, review diffs, and merge safely.
+- **Reproducibility:** Commit history + environment capture (e.g., `renv`) documents *what changed, when, and why*.
+- **Synchronization & backup:** Work across machines; if your laptop dies, your repo survives.
+- **Traceability:** Clear authorship, timestamps, and explanations—essential for research integrity.
+
+> Think of Git as your lab notebook’s **time machine**: every entry is dated, signed, and reversible.
+
+---
+
+## Core Concepts
+
+- **Repository (repo):** A project folder tracked by Git. Contains your code, docs, and a hidden `.git` folder that holds history/metadata.
+- **Commit:** A snapshot of staged changes with a message explaining what/why. Small, frequent, meaningful commits are best.
+- **Staging:** Choosing which changes to include in the next commit (like adding photos to an album before publishing).
+- **Remote:** A copy of your repo hosted elsewhere (e.g., **GitHub**). The default remote is named **`origin`**.
+- **Branches:** Parallel lines of development (e.g., `main` for production; `feature-x` for experiments).
+- **Pull / Push:** Download from remote (pull) and upload to remote (push).
+- **.gitignore:** A file listing paths that Git should *not* track (e.g., large data, caches, secrets).
+
+> **Guiding principle:** Commit the *recipe*, not the *meal*. Track code and small config, not raw data dumps or derived outputs.
+
+---
+
+## One-Time Setup (Desktop, No Terminal)
+
+### 1) Install Git
+- **Windows:** Install from <https://gitforwindows.org/> (accept defaults).
+- **macOS:** Install Xcode Command Line Tools when prompted, or install from <https://git-scm.com/download/mac>.
+
+### 2) Tell RStudio about Git
+1. Open **RStudio** → **Tools → Global Options… → Git/SVN**.
+2. Check **Enable version control interface for RStudio projects**.
+3. Ensure Git executable is detected (browse to it if needed):
+   - Windows: `C:\Program Files\Git\bin\git.exe`
+   - macOS: `/usr/bin/git`
+4. Click **OK** and restart RStudio if prompted.
+
+### 3) Authentication with GitHub (PAT over password)
+GitHub no longer accepts account passwords for pushes over HTTPS. You need a **Personal Access Token (PAT)**.
+
+1. In GitHub: **Settings → Developer settings → Personal access tokens** (fine‑grained or classic).  
+2. Create a token with **repo** scope. Copy it; you’ll paste it in RStudio when prompted to authenticate.  
+3. RStudio/your OS keychain will remember it for future pushes.
+
+> **HTTPS vs SSH?** For GUI‑only workflows, HTTPS + PAT is simplest. SSH keys are great too, but require a bit more setup.
+
+---
+
+## Recommended GUI Workflow (Start from GitHub → Clone in RStudio)
+
+This avoids command line and ensures your RStudio project is Git‑enabled from the start.
+
+### A) Create a repository on GitHub
+1. Go to **github.com → + → New repository**.
+2. Name it (e.g., `pbmc-analysis`), choose **Public** or **Private**.
+3. **Add a README** to initialise the repo.
+4. Click **Create repository** and copy the **HTTPS** URL (e.g., `https://github.com/you/pbmc-analysis.git`).
+
+### B) Clone the repo into RStudio
+1. **File → New Project → Version Control → Git**.
+2. Paste the **HTTPS URL**.
+3. Choose a local directory for the project.
+4. Click **Create Project**.
+
+RStudio opens your project with a **Git pane** (top-right by default): you’ll use this for staging, committing, pushing, pulling, branching, and viewing history.
+
+---
+
+## Day-to-Day in the Git Pane
+
+### Add files and make a first commit
+1. Create/edit files (e.g., `analysis.Rmd`). Save your work.
+2. In the **Git pane**, check boxes next to changed files to **Stage** them.
+3. Click **Commit**. Review diffs (left = old, right = new).
+4. Write a clear **Commit message** (what changed + why). Click **Commit**.
+5. Click **Push** (up arrow) to upload your changes to GitHub.
+6. If prompted, enter **username**, then paste your **PAT** as the password.
+
+**Good commit messages**
+- Prefer *intent/effect* over mechanics:  
+  - ✅ “Add QC plots and parameter notes to Section 2”  
+  - ✅ “Refactor preprocessing into `preprocess_data()`; fix missing BMI handling”  
+  - ❌ “Update file” or “Fix stuff”
+
+### Pull changes
+- Click **Pull** (down arrow) to fetch and merge changes made on GitHub or another machine.
+
+### .gitignore (GUI‑only)
+Create a `.gitignore` to avoid committing large or sensitive files:
+1. **File → New File → Text File**.
+2. Paste entries like:
+   ```
+   .Rproj.user
+   .Rhistory
+   .RData
+   .Ruserdata
+   .Renviron
+   renv/
+   renv.lock
+   data/
+   outputs/
+   R_objects/
+   *.csv
+   *.tsv
+   *.xlsx
+   ```
+3. Save as **`.gitignore`** in the project root.
+4. Stage → Commit → Push.
+
+> Adjust to your project. The goal is to keep repos small, secure, and reproducible.
+
+---
+
+## Starting from an Existing Local Project (No Repo Yet)
+
+**GUI‑only approach (no shell):**
+
+**Option 1 (safest):**
+1. Create a new repository on GitHub with a README.
+2. In RStudio, **clone** it (File → New Project → Version Control → Git).
+3. Copy your existing files into the new cloned project folder.
+4. Stage → Commit → Push.
+
+**Option 2 (helper functions; still no terminal):**
+If you’re okay running a couple of R helper calls, the **usethis** package automates setup:
+
+```r
+install.packages("usethis")
+usethis::use_git()     # turns on Git for the current project (adds .Rproj + Git pane)
+usethis::use_github()  # creates repo on GitHub and connects it (prompts for PAT)
+```
+
+After this one‑time setup, continue using the **Git pane** for staging/committing/pushing/pulling.
+
+---
+
+## Branching Without Fear (All in the GUI)
+
+Branches let you experiment safely.
+
+- **Create a branch:** Git pane → branch icon → **New Branch** (e.g., `feature-report-layout`).  
+- **Switch branches:** use the branch dropdown in the Git pane.  
+- **Commit & push** your branch changes.
+
+**Merging via Pull Request (recommended):**
+1. On GitHub, you’ll see a **Compare & pull request** button after pushing a branch.
+2. Open a PR, describe your changes, request review.
+3. **Merge** on GitHub when ready.
+4. Back in RStudio on `main`, **Pull** to get the merged work.
+
+> Why PRs? They document intent, enable review, and keep `main` stable.
+
+---
+
+## Handling Merge Conflicts (GUI Strategy)
+
+Conflicts happen when two people change the same lines. RStudio helps resolve them:
+
+1. **Pull**; RStudio reports conflicts.
+2. In the **Git pane**, click each conflicted file to open the **diff/merge** viewer.
+3. Edit to keep the desired code (remove conflict markers).
+4. Save, **Stage**, **Commit**, then **Push**.
+
+Tips:
+- Pull before you start a long session.
+- Commit small, logical chunks with descriptive messages.
+
+---
+
+## RStudio Git Tools You’ll Use Often
+
+- **Diff viewer:** Inspect changes before committing.
+- **History:** Git pane menu → **History** to browse commits and revert if needed.
+- **Revert/discard:** In the diff view, right‑click to discard local changes to a file.
+- **Project options:** **Tools → Project Options → Git/SVN** to adjust settings per project.
+
+---
+
+## Security & Good Practices
+
+- **Never commit secrets** (API keys, passwords). Put them in `.Renviron` (excluded via `.gitignore`) or use secret managers.
+- **Keep repos lean:** Link or document large data; avoid uploading raw files unless necessary (and allowed).
+- **Licensing:** Add a license (e.g., MIT) if sharing publicly.
+- **Citations & Credits:** Use README for instructions, references, and acknowledgements.
+- **Reproducibility:** Pair Git with `renv` to lock package versions; include `sessionInfo()` in reports.
+
+---
+
+## Troubleshooting (Quick Answers)
+
+- **RStudio can’t find Git:** Check **Tools → Global Options → Git/SVN** and set the Git executable path.
+- **Asked for password every push:** Use a **PAT**; let the OS keychain save it.
+- **No Git pane visible:** You’re not in a Git‑enabled project. Clone from GitHub or run `usethis::use_git()`.
+- **Push rejected (out of date):** Click **Pull**, resolve conflicts if prompted, then **Push** again.
+- **Large files rejected:** GitHub blocks files > 100MB. Don’t track huge files; store them elsewhere (or use Git LFS if appropriate).
+
+---
+
+## Hands‑On Lab (15–30 min)
+
+1. **Clone** a new GitHub repo into RStudio (with README).
+2. Add an `.Rmd` (e.g., `report.Rmd`) with a title and a simple plot.
+3. **Stage → Commit → Push**. Confirm it appears on GitHub.
+4. Edit on GitHub (add a line to README). Back in RStudio, **Pull**.
+5. Create a **branch** (`feature-styling`), tweak the Rmd, **Commit → Push**.
+6. Open a **Pull Request**, merge it on GitHub, then **Pull** in RStudio.
+7. Add a `.gitignore`, commit, push.
+8. (Optional) Use `usethis::use_github()` on an existing local project to publish it.
+
+---
+
+## Appendix: Glossary
+
+- **Commit:** Saved snapshot of staged changes with a message; forms your project’s history.
+- **Remote:** External copy of your repo (e.g., GitHub). Default name: `origin`.
+- **Branch:** Independent line of development (e.g., `main`, `dev`, `feature/plots`).
+- **PR (Pull Request):** A proposal to merge one branch into another; supports review and CI checks.
+- **Clone:** Create a local copy of a remote repo.
+- **Fork:** Your own copy of someone else’s repo on GitHub (useful for contributing).
+- **Diff:** The exact line‑by‑line changes between two versions.
+
+---
+
+## Optional helpers (no terminal; minimal R)
+
+Below functions are **optional** helpers if you want to perform setup from R instead of clicking around. After setup, keep using the GUI.
+
+```r
+# Install helper
+install.packages("usethis")
+
+# Turn on Git for current project (adds Git pane)
+usethis::use_git()
+
+# Create and connect a GitHub repo (prompts for PAT)
+usethis::use_github()
+
+# Add a useful .gitignore template for R
+usethis::use_git_ignore(c(".Rproj.user", ".Rhistory", ".RData", ".Ruserdata", ".Renviron",
+                          "renv/", "renv.lock", "data/", "outputs/", "R_objects/", "*.csv", "*.tsv", "*.xlsx"))
+```
+
+> After these helpers, continue with the **Git pane** to stage/commit/push/pull—no terminal required.
+
+---
+# Assignment Overview
+
+In this assignment you will put together everything we have learned in the workshop to complete a small but fully reproducible R‑based project. You can choose one of two project types:
+
+- **Bioinformatics Project:** Single‑cell RNA sequencing analysis of PBMCs  
+- **Statistics Project:** Logistic regression analysis on risk factors for diabetes  
+
+The deliverable is an R Markdown report (HTML/PDF/Word) and a GitHub repository containing your code and results. Imagine you are a consultant delivering to a client — clarity and reproducibility are just as important as correctness.
+
+---
+
+# Workflow checklist
+
+1. Create an R Project.  
+2. Set up project folders (scripts, data, outputs, R_objects).  
+3. Initialise Git in your project.  
+4. Create a GitHub repository.  
+5. Link your R Project Git to GitHub.  
+6. Create your R Markdown document (YAML + headings).  
+7. Initialise `renv` and install required packages.  
+8. Perform the analysis (depending on chosen project).  
+9. Render your report.  
+10. Add, commit, and push to GitHub.  
+11. Send the GitHub link and report to your client.  
+
+---
+
+# Option A: Bioinformatics Project — Identify Cell Populations in PBMCs
+
+**Scenario**: **Scenario**
+You’ve been contracted by a clinical research group to analyse a single-cell RNA sequencing dataset generated from a patient’s Peripheral Blood Mononuclear Cells (PBMCs). The group wants to understand the cellular composition of the sample in order to guide downstream immunological studies.
+
+The data were generated using 10X Genomics scRNA-seq technology, capturing approximately 2,700 individual cells. We will use the PBMC 3k dataset from Seurat’s guided tutorial (<https://satijalab.org/seurat/articles/pbmc3k_tutorial>).
+
+Your task is to:
+
+Process and quality-control the PBMC dataset.
+
+Cluster cells and identify major immune cell populations using known marker genes.
+
+Annotate clusters with cell type labels (e.g., T cells, B cells, monocytes, NK cells, dendritic cells, platelets).
+
+Report the relative proportions (ratios) of each annotated cell type within the patient’s PBMC sample.
+
+The client’s deliverable is a clear, reproducible R Markdown report containing:
+
+Clean workflow with checkpoints and figures (UMAP visualisation, QC plots).
+
+A table of identified cell types with their frequencies and percentages.
+
+Interpretations written in accessible language for immunologists who may not be familiar with the computational details.
+
+First lets load data in, it was downloaded from Seurat website: PBMC 3k guided tutorial vignette.
+
+```{r setup-bio, eval=FALSE}
+library(Seurat)
+
+# Load PBMC 3k dataset (replace path with yours)
+pbmc.data <- Read10X(data.dir = "path/to/pbmc3k/filtered_gene_bc_matrices/hg19/")
+pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", 
+                           min.cells = 3, min.features = 200)
+pbmc
+```
+
+### Quality Control
+
+Filter out low‑quality cells:
+- `< 200` detected genes (likely noise or broken cells)  
+- `> 5%` mitochondrial genes (likely apoptotic cells)  
+
+```{r qc, eval=FALSE}
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
+
+VlnPlot(pbmc, features = c("nFeature_RNA", "percent.mt"), ncol = 2)
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & percent.mt < 5)
+```
+
+### Normalisation and Feature Selection
+
+```{r norm, eval=FALSE}
+pbmc <- NormalizeData(pbmc)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+```
+
+### Dimensionality Reduction
+
+```{r pca, eval=FALSE}
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+DimPlot(pbmc, reduction = "pca") + NoLegend()
+ElbowPlot(pbmc)
+```
+
+Select PCs 1:10 and cluster cells:
+
+```{r cluster, eval=FALSE}
+pbmc <- FindNeighbors(pbmc, dims = 1:10)
+pbmc <- FindClusters(pbmc, resolution = 0.5)
+pbmc <- RunUMAP(pbmc, dims = 1:10)
+DimPlot(pbmc, reduction = "umap")
+```
+
+### Marker‑Based Cell Type Identification
+
+Example markers:  
+- **Naive CD4+ T cells** — IL7R, CCR7  
+- **CD14+ Monocytes** — CD14, LYZ  
+- **Memory CD4+ T cells** — IL7R, S100A4  
+- **B cells** — MS4A1  
+- **CD8+ T cells** — CD8A  
+- **NK cells** — GNLY, NKG7  
+- **Dendritic cells** — FCER1A, CST3  
+- **Platelets** — PPBP  
+
+```{r markers, eval=FALSE}
+VlnPlot(pbmc, features = c("MS4A1", "CD79A"))
+```
+
+*Activity*: Visualise the rest of the markers, annotate clusters with cell types, and replot the UMAP with labelled identities.
+
+---
+
+# Option B: Statistics Project — Logistic Regression on Diabetes Risk
+
+**Scenario & Question**
+You’ve just been contracted as a statistical consultant by a public health laboratory in India. The lab has been running a large survey of adults in their city, measuring health indicators like glucose, BMI, insulin, and age. Now, the lab director wants your help:
+
+- Brief from the Director:
+“We need to understand which of these factors best predict whether someone is diagnosed with diabetes. Please run a proper statistical analysis, give us odds ratios so clinicians can interpret the risks, and check how well the model predicts diabetes using ROC curves and AUC.”
+
+This is your job. Let’s step through the workflow together.
+
+We will use the **Pima Indians Diabetes** dataset (mlbench).
+
+```{r setup-stats, eval=FALSE}
+library(mlbench)
+library(tidyverse)
+library(broom)
+library(pROC)
+library(caret)
+library(car)
+library(ResourceSelection)
+
+data("PimaIndiansDiabetes2")
+df <- PimaIndiansDiabetes2
+summary(df)
+```
+
+### Step 1: Clean dataset
+
+```{r clean, eval=FALSE}
+df_complete <- df %>% drop_na(glucose, insulin, mass, age, diabetes)
+summary(df_complete)
+```
+
+### Step 2: Explore data
+
+```{r explore, eval=FALSE}
+df_complete %>% count(diabetes)
+
+df_long <- df_complete %>%
+  pivot_longer(c(glucose, insulin, mass, age), names_to = "var", values_to = "value")
+
+ggplot(df_long, aes(value, fill = diabetes)) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  facet_wrap(~ var, scales = "free")
+```
+
+### Step 3: Train/test split
+
+```{r split, eval=FALSE}
+set.seed(2025)
+train_ix <- caret::createDataPartition(df_complete$diabetes, p = 0.7, list = FALSE)
+train <- df_complete[train_ix, ]
+test  <- df_complete[-train_ix, ]
+```
+
+### Step 4: Logistic regression
+
+```{r model, eval=FALSE}
+fit <- glm(diabetes ~ age + glucose + mass + insulin,
+           data = train, family = binomial)
+summary(fit)
+```
+
+### Step 5: Odds Ratios
+
+```{r or, eval=FALSE}
+or_tab <- broom::tidy(fit, conf.int = TRUE, exponentiate = TRUE) %>%
+  mutate(across(estimate:conf.high, ~ round(.x, 3))) %>%
+  select(term, OR = estimate, `2.5%` = conf.low, `97.5%` = conf.high, p.value)
+or_tab
+```
+
+### Step 6: Model performance
+
+ROC curve and AUC:
+
+```{r roc, eval=FALSE}
+test$pred_prob <- predict(fit, newdata = test, type = "response")
+roc_obj <- pROC::roc(response = test$diabetes,
+                     predictor = test$pred_prob,
+                     levels = c("neg", "pos"))
+plot(roc_obj, print.auc = TRUE)
+auc(roc_obj)
+```
+
+Hosmer–Lemeshow test and Brier score for calibration:
+
+```{r calib, eval=FALSE}
+ResourceSelection::hoslem.test(as.numeric(train$diabetes)-1, fitted(fit), g=10)
+mean((as.numeric(test$diabetes)-1 - test$pred_prob)^2)
+```
+
+---
+
+### Deliverables
+
+As your final assignment deliver to your "client":  
+- Clean, modular R Project (with renv + GitHub).  
+- R Markdown report (well‑structured with YAML and headings).  
+- Figures/tables of results.  
+- Brief written interpretation of results and limitations.  
+- GitHub link with reproducible code.  
+
+---
+
+# Key Points from workshop
+- Projects + `.gitignore` prevent chaos.
+- Quarto/Rmd for reproducible reporting.
+- `renv` pins packages.
+- Modular pipelines ease debugging.
+- Git/GitHub optional but valuable.
+
